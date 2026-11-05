@@ -81,6 +81,24 @@ Ranks players by role score within each league, showing both the club in that se
 For past seasons Wyscout's `Team` column is the current club, so use `Team within selected timeframe` to
 see where the minutes were played.
 
+## Report erzeugen
+
+```
+python generate_report.py reports/<player>.yaml data/<wyscout_export>.csv [--theme paper]
+```
+
+- `reports/<player>.yaml`: eine Kopie von `reports/TEMPLATE.yaml` pro Spieler
+- `data/<wyscout_export>.csv`: dein Wyscout-Export (.csv oder .xlsx); `leagues` in der YAML bestimmt die Vergleichsgruppe
+- `--theme paper`: helle Druckversion; ohne den Parameter kommt die dunkle
+
+Beispiel:
+
+```
+python generate_report.py reports/krzyzanowski.yaml data/Wyscout_League_Export_15102026.csv --theme paper
+```
+
+Ausgabe in `output/<spieler>-<position>/`: PDF, PNG pro Seite und HTML.
+
 ## Workflow per player
 
 1. **Export from Wyscout.** All positions, the metric columns in `config/metric_templates.yaml`. Multi-league
