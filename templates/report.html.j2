@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ player.name }}, {{ player.position_code }}, scouting report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: {{ theme.bg }}; --panel: {{ theme.panel }}; --line: {{ theme.panel_line }};
+  --text: {{ theme.text }}; --muted: {{ theme.muted }}; --faint: {{ theme.faint }};
+  --target: {{ theme.target }}; --pool: {{ theme.pool }};
+  --good: {{ theme.good }}; --bad: {{ theme.bad }};
+  --verdict: {{ ctx.verdict_color }}; --verdict-ink: {{ theme.verdict_ink }};
+  --display: "{{ fonts.display }}", "Inter", system-ui, sans-serif;
+  --body: "{{ fonts.body }}", "Inter", system-ui, sans-serif;
+}
+{{ css | safe }}
+</style>
+</head>
+<body class="theme-{{ theme_name }}">
+
+{# ================================================================== macros #}
+{% macro brand_mark(layout="horizontal") %}
+<div class="brand brand-{{ layout }}">
+  {% if brand.logo_uri %}<img src="{{ brand.logo_uri }}" alt="{{ brand.name }}">
+  {% elif layout == "stacked" %}{{ brand.logo_svg_stacked | safe }}
+  {% else %}{{ brand.logo_svg | safe }}{% endif %}
+</div>
+{% endmacro %}
+
+{% macro footer(n) %}
+<footer class="foot">
+  <span>{{ brand.confidentiality }}</span>
+  <span>Scout: {{ ctx.scout }}, {{ ctx.report_date_str }}. Data: {{ ctx.data_source }}, {{ ctx.data_date_str }}.{% if brand.website %} {{ brand.website }}{% endif %}</span>
+  <span class="pageno">{{ n }} / {{ pages }}</span>
+</footer>
+{% endmacro %}
+
+{% macro list_block(title, items, kind) %}
+<div class="sublist" data-fit="{{ title | lower }}">
+  <h3>{{ title }}</h3>
+  <ul class="marked {{ kind }}">{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>
+</div>
+{% endmacro %}
+
+{# ================================================================== PAGE 1: DECISION #}
+<section class="page p1">
+  <header class="id-band">
+    <div class="portrait">
+      {% if player.photo_uri %}<img src="{{ player.photo_uri }}" alt="">
+      {% else %}<span>{{ player.initials }}</span>{% endif %}
+    </div>
+
+    <div class="who">
+      <div class="positions">
+        <span class="pos primary">{{ player.position_code }}</span>
+        {% for p in player.secondary_positions %}<span class="pos">{{ p }}</span>{% endfor %}
+        {% if player.role %}<span class="role">{{ player.role }}</span>{% endif %}
+      </div>
+      <h1 class="name">{{ player.name }}</h1>
+      <p class="club">
+        {% if player.badge_uri %}<img class="badge" src="{{ player.badge_uri }}" alt="">{% endif %}
+        <span><strong>{{ player.club }}</strong>{% if player.loan_club %}, on loan at {{ player.loan_club }}{% endif %}</span>
+      </p>
+    </div>
+
+    <dl class="facts">
+      <div><dt>Age</dt><dd>{{ player.age or '-' }}{% if player.dob != '-' %} <small>{{ player.dob }}</small>{% endif %}</dd></div>
+      <div><dt>Nationality</dt><dd>{{ player.nationality }}{% if player.passport %} <small>{{ player.passport }}</small>{% endif %}</dd></div>
+      <div><dt>Foot</dt><dd>{{ player.foot }}</dd></div>
+      <div><dt>Height / weight</dt><dd>{{ player.physical }}</dd></div>
+      <div><dt>Contract until</dt><dd>{{ player.contract }}</dd></div>
+      <div><dt>Market value</dt><dd>{{ player.market_value }}</dd></div>
+      <div><dt>Agent</dt><dd>{{ player.agent }}</dd></div>
+      <div><dt>{{ ctx.season }}</dt><dd>{{ ctx.matches }} <small>games</small> {{ "{:,}".format(ctx.minutes) if ctx.minutes is number else ctx.minutes }} <small>min</small></dd></div>
+    </dl>
+
+    {{ brand_mark("stacked") }}
+  </header>
+
+  <main class="p1-grid">
+    {# ---------- left: conclusion first, then the reasons #}
+    <div class="col-story">
+      <section class="decision" data-fit="decision">
+        <div class="decision-top">
+          <div><span class="k">Recommendation</span><strong class="verdict">{{ ctx.verdict }}</strong></div>
+          {% if rating.current %}<div class="rating"><span class="k">Current</span><b>{{ rating.current }}</b><small>/ {{ rating.max }}</small></div>{% endif %}
+          {% if rating.potential %}<div class="rating"><span class="k">Potential</span><b>{{ rating.potential }}</b><small>/ {{ rating.max }}</small></div>{% endif %}
+        </div>
+        {% if ladder and ladder.line %}<p class="level-line">{{ ladder.line }}</p>{% endif %}
+        {% if scouting.projection %}<p class="projection-text">{{ scouting.projection }}</p>{% endif %}
+        <dl class="fit">
+          {% if ctx.suitability %}<div><dt>Fit</dt><dd>{{ ctx.suitability }}</dd></div>{% endif %}
+          {% if ctx.adaptation %}<div><dt>Adaptation</dt><dd>{{ ctx.adaptation }}</dd></div>{% endif %}
+          {% if ctx.next_action %}<div><dt>Next step</dt><dd>{{ ctx.next_action }}</dd></div>{% endif %}
+        </dl>
+      </section>
+
+      <section class="block" data-fit="summary">
+        <h2>Summary</h2>
+        <ul class="bullets">{% for item in scouting.summary %}<li>{{ item }}</li>{% endfor %}</ul>
+      </section>
+
+      <section class="block lists">
+        {{ list_block("Strengths", scouting.strengths, "plus") }}
+        {{ list_block("Areas to develop", scouting.development, "minus") }}
+        {{ list_block("Risks", scouting.risks, "risk") }}
+      </section>
+    </div>
+
+    {# ---------- right: the data that backs it #}
+    <section class="block col-data">
+      <div class="block-head">
+        <h2>Data profile</h2>
+        <span class="sub">Percentile vs {{ group_label }}, {{ ctx.pool_label }}, {{ min_minutes }}+ min (n = {{ pool_n }})</span>
+      </div>
+      <div class="pizza">{{ pizza_svg | safe }}</div>
+      <div class="legend">
+        <ul class="cats">{% for c in categories %}<li style="color: {{ c.color }}">{{ c.name }}</li>{% endfor %}</ul>
+        <ul class="tiers">{% for t in tiers %}<li><i style="background: {{ t.color }}"></i>{{ t.label }}</li>{% endfor %}</ul>
+      </div>
+      <div class="role-score">
+        <div><span class="k">Role score, {{ role.name | lower }}</span><span class="role-def">Weighted z-score, 0 = pool average</span></div>
+        <span class="score {{ 'good' if role.score >= 0.5 else 'bad' if role.score <= -0.5 else '' }}">{{ "%+.2f" | format(role.score) }}</span>
+        <span class="rank">Rank {{ role.rank }} of {{ role.n }}</span>
+      </div>
+      {% for note in notes %}<p class="caution">{{ note }}</p>{% endfor %}
+    </section>
+  </main>
+  {{ footer(1) }}
+</section>
+
+{# ================================================================== PAGE 2: DETAIL #}
+<section class="page p2">
+  <header class="page-head">
+    <div>
+      <h1>Scouting detail</h1>
+      <p class="crumbs">
+        <span class="crumb-name">{{ player.name }}</span><span>{{ player.position_code }}</span><span>{{ player.club }}{% if player.loan_club %}, on loan at {{ player.loan_club }}{% endif %}</span><span>{{ ctx.league }} {{ ctx.season }}</span>
+      </p>
+    </div>
+    {{ brand_mark() }}
+  </header>
+
+  <main class="p2-grid">
+    <section class="block grades" data-fit="grades and observation log">
+      <div class="block-head">
+        <h2>Four-corner grades</h2>
+        <span class="sub">vs our level{% if club_level %}, {{ club_level.label }}{% endif %}</span>
+      </div>
+      <div class="corners">
+        {% for c in grades %}
+        <div class="corner">
+          <h3>{{ c.name }}{% if c.avg %}<span class="avg">{{ "%.1f" | format(c.avg) }}</span>{% endif %}</h3>
+          {% for a in c.attributes %}
+          <div class="attr">
+            <span class="attr-name">{{ a.name }}</span>
+            <span class="pips g{{ a.grade }}">{% for i in range(1, 6) %}<i class="{{ 'on' if i <= a.grade }}"></i>{% endfor %}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <p class="scale"><span>vs our level:</span>{% for k, v in grade_scale.items() | sort %}<span><b>{{ k }}</b> {{ v | replace(' our level', '') | lower }}</span>{% endfor %}</p>
+      <div class="log-head">
+        <h3>Observation log</h3>
+        <span class="conf conf-{{ confidence.score }}"><i></i><i></i><i></i>{{ confidence.level }} confidence</span>
+      </div>
+      <table class="log">
+        <thead><tr><th>Match</th><th>Opponent</th><th>Viewed</th><th class="num">Min</th><th class="num">Grade</th></tr></thead>
+        <tbody>
+        {% for o in observations %}
+          <tr><td>{{ o.date_str }}</td><td>{{ o.opponent }}{% if o.competition %} <small>{{ o.competition }}</small>{% endif %}</td>
+              <td><span class="mode {{ o.mode | lower }}">{{ o.mode }}</span></td>
+              <td class="num">{{ o.minutes }}</td><td class="num">{{ o.grade }}<small>/5</small></td></tr>
+        {% else %}
+          <tr><td colspan="5" class="empty">No matches logged. Add them under `observations`.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if confidence.gaps %}<p class="gaps">To reach High: {{ confidence.gaps | join(', ') }}.</p>{% endif %}
+    </section>
+
+    {% for s in scatters %}
+    <section class="block scatter-card">
+      <div class="block-head"><h2>{{ s.title }}</h2><span class="sub">n = {{ s.n }}</span></div>
+      <div class="scatter">{{ s.svg | safe }}</div>
+    </section>
+    {% endfor %}
+
+    <section class="block interp" data-fit="data and video">
+      <div class="block-head"><h2>Data and video</h2>{% if interpretation_auto %}<span class="sub">Auto-generated from data, add your video view</span>{% endif %}</div>
+      {% if ctx.team_context %}<p class="team-context"><b>Team context.</b> {{ ctx.team_context }}</p>{% endif %}
+      <ul class="evidence">
+        {% for i in scouting.interpretation %}
+        <li>{% if i.evidence_label %}<span class="ev ev-{{ i.evidence }}">{{ i.evidence_label }}</span>{% endif %}<p>{{ i.text }}</p></li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% for title, key in [("In possession", "in_possession"), ("Out of possession", "out_of_possession")] %}
+    <section class="block phase" data-fit="{{ title | lower }}">
+      <h2>{{ title }}</h2>
+      <dl class="traits">
+        {% for t in scouting[key] %}
+        <div>
+          <dt><span>{{ t.title }}</span>{% if t.clips %}<span class="clips">{% for c in t.clips %}<i>{{ c }}</i>{% endfor %}</span>{% endif %}</dt>
+          <dd>{{ t.text }}</dd>
+        </div>
+        {% endfor %}
+      </dl>
+    </section>
+    {% endfor %}
+
+  </main>
+  {{ footer(2) }}
+</section>
+
+</body>
+</html>

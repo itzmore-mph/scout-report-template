@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+output/
+# Keep real Wyscout exports out of public repos (licensed data).
+data/*
+!data/demo_wyscout_export.xlsx

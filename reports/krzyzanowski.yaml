@@ -1,0 +1,114 @@
+# J. Krzyżanowski, Wisła Kraków. Data: 2025-26 Poland 1 Liga (full season). Notes still to be written from video.
+# Current season for comparison: set leagues to [Poland Ekstraklasa 2026-27] and min_minutes to 450.
+# Every text field below is a prompt: replace it with your own observation.
+# Empty identity fields are filled from the Wyscout export where possible.
+
+player:
+  name: J. Krzyżanowski          # add first name once confirmed
+  wyscout_name: J. Krzyżanowski            # exactly as in the export's "Player" column
+  wyscout_team:                    # only if the name appears twice in the selected leagues
+  template: FB                     # CB | FB | CM | W | AM | ST | GK
+  position_code: LB
+  secondary_positions: []
+  role: Attacking full-back
+  club: Wisła Kraków
+  loan_club:                       # leave empty if not on loan
+  nationality:                     # empty = passport country from the export
+  passport:                        # EU | Non-EU, matters for squad registration
+  date_of_birth:                   # YYYY-MM-DD; empty = age from the export
+  foot:
+  height_cm:
+  weight_kg:
+  market_value:
+  contract_expires: 2030-06-30     # extended, per 2026-27 Wyscout row
+  agent:
+  photo:                           # optional, relative to this file
+  club_badge:
+
+context:
+  season: 2025/26
+  league: Polish 1 Liga
+  leagues: [Poland 1 Liga 2025-26]  # exact value(s) of the export's "League" column = comparison pool
+  data_source: Wyscout
+  data_date: 2026-10-15
+  report_date: 2026-11-05
+  scout: Moritz Philipp Haaf
+  min_minutes: 600
+  recommendation: Continue scouting  # Sign | Monitor | Continue scouting | Discard
+  suitability: How he fits our game model and which role he would fill.
+  adaptation: Expected time to impact, e.g. 6 to 12 months, and what drives it.
+  next_action: The next concrete step, e.g. live watch vs a top-three side, contract check.
+  team_context: His team's style, league position and possession share, so the data can be read correctly.
+  reference_line: mean             # mean | median in scatters
+  scatter_labels: 4
+
+rating:                            # 1 to 10, see config/grading.yaml
+  current:
+  potential:
+
+level:                             # ladder keys from config/grading.yaml
+  current:
+  potential:
+  club: L3
+  horizon:
+
+# 1 to 5, relative to our level. Pick the three attributes per corner that
+# matter most for the role (from your positional profile).
+grades:
+  Technical:
+    Passing range:
+    First touch under pressure:
+    Weaker foot:
+  Tactical:
+    Positioning:
+    Decision making:
+    Scanning:
+  Physical:
+    Acceleration:
+    Strength in duels:
+    Aerial ability:
+  Psychological:
+    Composure:
+    Recovery from mistakes:
+    Communication:
+
+observations: []
+  # - {date: 2026-10-04, opponent: Opponent, competition: League, mode: live, minutes: 90, grade: 3}
+
+highlight_players: []
+
+scouting:
+  summary:
+    - Profile in one line. Position, foot, build and the trait that defines him.
+    - How he influences games in and out of possession, in his team's context.
+    - Age, level and pathway. Where he is now and how he got there.
+  projection: What he can become, by when, and what has to happen for it. Clubs buy the player in two years, not today.
+  strengths:
+    - Strength one
+    - Strength two
+    - Strength three
+  development:
+    - Area one
+    - Area two
+    - Area three
+  risks:
+    - Sporting, contract, adaptation or character risk
+    - What could make this signing fail
+  in_possession:
+    - title: First trait
+      text: What he does, how often, against what pressure. Evidence over adjectives.
+      clips: ["12' vs Opponent"]
+    - title: Second trait
+      text: A repeatable action that influences the game, or one that limits him.
+    - title: Third trait
+      text: Behaviour in transition or under pressure.
+  out_of_possession:
+    - title: First trait
+      text: Positioning, scanning and decision to engage or hold.
+    - title: Second trait
+      text: Duels on the ground and in the air, and what decides them.
+    - title: Third trait
+      text: Reaction after a mistake or losing the ball. The psychological picture.
+  # Leave empty to show auto-generated data findings (printed in the console on every run).
+  # Replace with your own lines once you have watched him: evidence both | video | data.
+  interpretation: []

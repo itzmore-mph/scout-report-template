@@ -1,0 +1,238 @@
+# Metric templates per position group.
+#
+# `column` must match a column header in your Wyscout export. Matching is
+# case- and whitespace-insensitive; if a column is missing, the generator
+# stops and suggests the closest header it found.
+#
+# Set `invert: true` for metrics where lower is better (e.g. fouls, goals
+# conceded). Percentiles are then flipped so 100 always means "best".
+#
+# `weight` (default 1) feeds the role score: a weighted mean of z-scores
+# that reflects your positional profile. 0 keeps a metric on the pizza but
+# out of the score. `role` names the profile the weights describe.
+
+position_groups:
+  # Wyscout position codes. Players are pooled by their primary
+  # (first-listed) position in the export's "Position" column.
+  CB: [CB, LCB, RCB, LCB3, RCB3]
+  FB: [LB, RB, LWB, RWB, LB5, RB5]
+  CM: [DMF, LDMF, RDMF, LCMF, RCMF, LCMF3, RCMF3]
+  W:  [LW, RW, LWF, RWF, LAMF, RAMF]
+  AM: [AMF]
+  ST: [CF]
+  GK: [GK]
+
+templates:
+
+  CB:
+    role: Ball-playing centre-back
+    label: Centre-back
+    categories:
+      - name: Passing progression
+        metrics:
+          - {label: Progressive passes /90, column: Progressive passes per 90, weight: 3}
+          - {label: Accurate progressive passes %, column: "Accurate progressive passes, %", weight: 2}
+          - {label: Passes to final third /90, column: Passes to final third per 90, weight: 2}
+          - {label: Accurate passes to final third %, column: "Accurate passes to final third, %", weight: 1}
+      - name: Ball carrying
+        metrics:
+          - {label: Progressive runs /90, column: Progressive runs per 90, weight: 1}
+          - {label: Dribbles /90, column: Dribbles per 90, weight: 0.5}
+      - name: Ground defending
+        metrics:
+          - {label: Defensive duels /90, column: Defensive duels per 90, weight: 1}
+          - {label: Defensive duels won %, column: "Defensive duels won, %", weight: 2}
+          - {label: PAdj interceptions, column: PAdj Interceptions, weight: 2}
+      - name: Aerial ability
+        metrics:
+          - {label: Aerial duels /90, column: Aerial duels per 90, weight: 1}
+          - {label: Aerial duels won %, column: "Aerial duels won, %", weight: 2}
+    scatters:
+      - title: Passing progression
+        x: {label: Progressive passes /90, column: Progressive passes per 90}
+        y: {label: Accurate progressive passes %, column: "Accurate progressive passes, %"}
+      - title: Defensive activity
+        x: {label: PAdj interceptions, column: PAdj Interceptions}
+        y: {label: Successful defensive actions /90, column: Successful defensive actions per 90}
+
+  FB:
+    role: Attacking full-back
+    label: Full-back
+    categories:
+      - name: Progression
+        metrics:
+          - {label: Progressive passes /90, column: Progressive passes per 90}
+          - {label: Progressive runs /90, column: Progressive runs per 90}
+          - {label: Passes to final third /90, column: Passes to final third per 90}
+      - name: Final-third delivery
+        metrics:
+          - {label: Crosses /90, column: Crosses per 90}
+          - {label: Accurate crosses %, column: "Accurate crosses, %"}
+          - {label: xA /90, column: xA per 90}
+          - {label: Deep completions /90, column: Deep completions per 90}
+      - name: Ground defending
+        metrics:
+          - {label: Defensive duels /90, column: Defensive duels per 90}
+          - {label: Defensive duels won %, column: "Defensive duels won, %"}
+          - {label: PAdj interceptions, column: PAdj Interceptions}
+      - name: Aerial ability
+        metrics:
+          - {label: Aerial duels won %, column: "Aerial duels won, %"}
+    scatters:
+      - title: Wide delivery
+        x: {label: Crosses /90, column: Crosses per 90}
+        y: {label: xA /90, column: xA per 90}
+      - title: One-v-one defending
+        x: {label: Defensive duels /90, column: Defensive duels per 90}
+        y: {label: Defensive duels won %, column: "Defensive duels won, %"}
+
+  CM:
+    role: Progressive central midfielder
+    label: Central midfielder
+    categories:
+      - name: Circulation
+        metrics:
+          - {label: Passes /90, column: Passes per 90}
+          - {label: Accurate passes %, column: "Accurate passes, %"}
+          - {label: Received passes /90, column: Received passes per 90}
+      - name: Progression
+        metrics:
+          - {label: Progressive passes /90, column: Progressive passes per 90}
+          - {label: Passes to final third /90, column: Passes to final third per 90}
+          - {label: Progressive runs /90, column: Progressive runs per 90}
+      - name: Creation
+        metrics:
+          - {label: Key passes /90, column: Key passes per 90}
+          - {label: xA /90, column: xA per 90}
+      - name: Defending
+        metrics:
+          - {label: Defensive duels /90, column: Defensive duels per 90}
+          - {label: Defensive duels won %, column: "Defensive duels won, %"}
+          - {label: PAdj interceptions, column: PAdj Interceptions}
+    scatters:
+      - title: Ball progression
+        x: {label: Progressive passes /90, column: Progressive passes per 90}
+        y: {label: Progressive runs /90, column: Progressive runs per 90}
+      - title: Defensive engagement
+        x: {label: PAdj interceptions, column: PAdj Interceptions}
+        y: {label: Defensive duels won %, column: "Defensive duels won, %"}
+
+  W:
+    role: Inside forward
+    label: Winger
+    categories:
+      - name: Goal threat
+        metrics:
+          - {label: Non-penalty goals /90, column: Non-penalty goals per 90}
+          - {label: xG /90, column: xG per 90}
+          - {label: Shots /90, column: Shots per 90}
+      - name: Creation
+        metrics:
+          - {label: xA /90, column: xA per 90}
+          - {label: Key passes /90, column: Key passes per 90}
+          - {label: Passes to penalty area /90, column: Passes to penalty area per 90}
+      - name: Ball carrying
+        metrics:
+          - {label: Dribbles /90, column: Dribbles per 90}
+          - {label: Successful dribbles %, column: "Successful dribbles, %"}
+          - {label: Progressive runs /90, column: Progressive runs per 90}
+          - {label: Touches in box /90, column: Touches in box per 90}
+      - name: Defending
+        metrics:
+          - {label: Successful def. actions /90, column: Successful defensive actions per 90}
+    scatters:
+      - title: Goal threat
+        x: {label: xG /90, column: xG per 90}
+        y: {label: xA /90, column: xA per 90}
+      - title: Ball carrying
+        x: {label: Dribbles /90, column: Dribbles per 90}
+        y: {label: Successful dribbles %, column: "Successful dribbles, %"}
+
+  AM:
+    role: Creative attacking midfielder
+    label: Attacking midfielder
+    categories:
+      - name: Goal threat
+        metrics:
+          - {label: Non-penalty goals /90, column: Non-penalty goals per 90}
+          - {label: xG /90, column: xG per 90}
+          - {label: Touches in box /90, column: Touches in box per 90}
+      - name: Creation
+        metrics:
+          - {label: xA /90, column: xA per 90}
+          - {label: Key passes /90, column: Key passes per 90}
+          - {label: Smart passes /90, column: Smart passes per 90}
+          - {label: Passes to penalty area /90, column: Passes to penalty area per 90}
+      - name: Progression
+        metrics:
+          - {label: Progressive passes /90, column: Progressive passes per 90}
+          - {label: Progressive runs /90, column: Progressive runs per 90}
+          - {label: Dribbles /90, column: Dribbles per 90}
+      - name: Defending
+        metrics:
+          - {label: Successful def. actions /90, column: Successful defensive actions per 90}
+    scatters:
+      - title: Chance creation
+        x: {label: Key passes /90, column: Key passes per 90}
+        y: {label: xA /90, column: xA per 90}
+      - title: Goal threat
+        x: {label: Touches in box /90, column: Touches in box per 90}
+        y: {label: xG /90, column: xG per 90}
+
+  ST:
+    role: Complete centre-forward
+    label: Centre-forward
+    categories:
+      - name: Finishing
+        metrics:
+          - {label: Non-penalty goals /90, column: Non-penalty goals per 90}
+          - {label: xG /90, column: xG per 90}
+          - {label: Shots /90, column: Shots per 90}
+          - {label: Shots on target %, column: "Shots on target, %"}
+          - {label: Goal conversion %, column: "Goal conversion, %"}
+      - name: Box presence
+        metrics:
+          - {label: Touches in box /90, column: Touches in box per 90}
+          - {label: Aerial duels won %, column: "Aerial duels won, %"}
+      - name: Link play
+        metrics:
+          - {label: xA /90, column: xA per 90}
+          - {label: Received passes /90, column: Received passes per 90}
+          - {label: Offensive duels won %, column: "Offensive duels won, %"}
+      - name: Pressing
+        metrics:
+          - {label: Successful def. actions /90, column: Successful defensive actions per 90}
+    scatters:
+      - title: Shot quality
+        x: {label: Shots /90, column: Shots per 90}
+        y: {label: xG /90, column: xG per 90}
+      - title: Finishing output
+        x: {label: xG /90, column: xG per 90}
+        y: {label: Non-penalty goals /90, column: Non-penalty goals per 90}
+
+  GK:
+    role: Sweeper goalkeeper
+    label: Goalkeeper
+    categories:
+      - name: Shot stopping
+        metrics:
+          - {label: Save rate %, column: "Save rate, %"}
+          - {label: Prevented goals /90, column: Prevented goals per 90}
+          - {label: Conceded goals /90, column: Conceded goals per 90, invert: true}
+      - name: Distribution
+        metrics:
+          - {label: Passes /90, column: Passes per 90}
+          - {label: Accurate passes %, column: "Accurate passes, %"}
+          - {label: Long passes /90, column: Long passes per 90}
+          - {label: Accurate long passes %, column: "Accurate long passes, %"}
+      - name: Area control
+        metrics:
+          - {label: Exits /90, column: Exits per 90}
+          - {label: GK aerial duels /90, column: Aerial duels per 90.1}
+    scatters:
+      - title: Shot stopping
+        x: {label: Save rate %, column: "Save rate, %"}
+        y: {label: Prevented goals /90, column: Prevented goals per 90}
+      - title: Distribution
+        x: {label: Long passes /90, column: Long passes per 90}
+        y: {label: Accurate long passes %, column: "Accurate long passes, %"}

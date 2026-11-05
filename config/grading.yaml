@@ -1,0 +1,49 @@
+# Club-specific grading model. Edit once to match your club's language;
+# every report then uses the same scale.
+
+# Attribute grades (1 to 5) are always given relative to the club's level
+# (the `club` rung of the level ladder), not in the abstract.
+grade_scale:
+  5: Above our level
+  4: At our level
+  3: Close to our level
+  2: Below our level
+  1: Well below our level
+
+# Four-corner model. Attributes are free text in each report; these are
+# the corner names and the order they appear in.
+corners: [Technical, Tactical, Physical, Psychological]
+
+# Level ladder, highest first. Reports refer to rungs by key.
+# Labels are deliberately generic; adapt the examples to your market.
+levels:
+  - key: L1
+    label: Elite
+    example: Top-5 league, top half
+  - key: L2
+    label: Top-5 league
+    example: Top-5 league squad level
+  - key: L3
+    label: Upper European
+    example: 2. Bundesliga, Eredivisie, Belgian Pro League
+  - key: L4
+    label: Established top flight
+    example: Austrian Bundesliga, Swiss Super League, Serbian SuperLiga
+  - key: L5
+    label: Developing top flight
+    example: Smaller top flights, strong second tiers
+  - key: L6
+    label: Development
+    example: Second tiers, reserves, youth
+
+# Evidence confidence. A report reaches a level only if every threshold is met.
+confidence:
+  High:   {matches: 4, live: 1, data_minutes: 900, pool: 20}
+  Medium: {matches: 2, live: 0, data_minutes: 450, pool: 12}
+  # Anything below Medium is Low.
+
+# Verdicts, in the order clubs use them to move a player through the process.
+verdicts: [Sign, Monitor, Continue scouting, Discard]
+
+# Overall ratings (current ability and potential) use this scale.
+rating_max: 10

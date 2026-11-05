@@ -1,0 +1,64 @@
+# Brand and colour settings. Pick a theme with `--theme night` or `--theme paper`.
+# `paper` is the print version for recruitment meetings.
+#
+# Colour logic: green means strong. The pizza colours each slice by how good the
+# value is (top 30%, middle, bottom 30%), not by category, so strengths stand out
+# at first sight. Categories are shown by the colour of the metric labels.
+
+brand:
+  name: Moritz Philipp Haaf
+  tagline: Football Scouting & Data
+  website: itzmore.dev              # portfolio link, shown in the footer
+  logo: null                        # optional SVG/PNG path; replaces the built-in logo
+  confidentiality: Confidential. Prepared for internal recruitment use.
+
+fonts:
+  display: Inter Display   # falls back to Inter with optical sizing
+  body: Inter
+
+tiers:                     # percentile cut-offs for slice colours
+  strong: 70
+  weak: 30
+
+themes:
+  night:                   # floodlit pitch
+    bg: "#0A1612"
+    panel: "#102119"
+    panel_line: "#1E3429"
+    text: "#E9F1EC"
+    muted: "#8EA79B"
+    faint: "#3F5A4D"
+    target: "#5EE6B5"
+    pool: "#58756A"
+    good: "#5EE6B5"
+    bad: "#F28472"
+    tier_colors: {strong: "#5EE6B5", average: "#A9BDB3", weak: "#F28472"}
+    tier_ink: {strong: "#08130F", average: "#08130F", weak: "#08130F"}
+    categories: ["#9FC3FF", "#D7B2FF", "#FFD08A", "#8FE3F0"]
+    verdict:
+      Sign: "#5EE6B5"
+      Monitor: "#FFC65C"
+      Continue scouting: "#9FC3FF"
+      Discard: "#F28472"
+    verdict_ink: "#08130F"
+
+  paper:                   # match-programme paper, green ink
+    bg: "#EDF1EF"
+    panel: "#FFFFFF"
+    panel_line: "#D4DED9"
+    text: "#0D1F1A"
+    muted: "#55695F"
+    faint: "#AFC1B8"
+    target: "#0A8F67"
+    pool: "#A2B4AB"
+    good: "#0A8F67"
+    bad: "#C94F3F"
+    tier_colors: {strong: "#0A8F67", average: "#C3D1CA", weak: "#D2604F"}
+    tier_ink: {strong: "#FFFFFF", average: "#0D1F1A", weak: "#FFFFFF"}
+    categories: ["#2C4F9E", "#7B3FA0", "#9A6406", "#0F7187"]
+    verdict:
+      Sign: "#0A8F67"
+      Monitor: "#C68A12"
+      Continue scouting: "#3463B0"
+      Discard: "#C2473A"
+    verdict_ink: "#FFFFFF"

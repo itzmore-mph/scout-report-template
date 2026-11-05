@@ -1,0 +1,135 @@
+# Fictional example. Copy this file per player and edit.
+# Empty fields are filled from the Wyscout export where possible
+# (foot, height, market value, contract, games, minutes).
+
+player:
+  name: Jonas Brandt
+  wyscout_name: J. Brandt        # exactly as in the export's "Player" column
+  wyscout_team: FC Beispiel      # only needed if the name appears twice
+  template: CB                   # CB | FB | CM | W | AM | ST | GK
+  position_code: LCB
+  secondary_positions: [CB, LB]
+  role: Ball-playing centre-back
+  club: SV Musterstadt
+  loan_club: FC Beispiel         # leave empty if not on loan
+  nationality: Germany
+  passport: EU                   # EU | Non-EU | free text, matters for squad registration
+  date_of_birth: 2009-03-21
+  foot:
+  height_cm:
+  market_value:
+  contract_expires:
+  agent:
+  photo:                         # optional, relative to this file
+  club_badge:
+
+context:
+  season: 2026/27
+  league: Demo Liga
+  data_source: Wyscout
+  data_date: 2026-10-15
+  report_date: 2026-11-05
+  scout: Moritz Philipp Haaf
+  leagues: [Demo Liga 2026-27]   # exact value(s) of the export's "League" column
+  min_minutes: 600
+  recommendation: Sign           # Sign | Monitor | Continue scouting | Discard
+  suitability: Left-sided CB in a back four that builds through the centre-backs. Fits our possession model.
+  adaptation: 6 to 12 months. Needs physical development before starting every week.
+  next_action: Live watch at Union Nordtal (22 Nov) against a physical front two. Open loan-to-buy talks.
+  team_context: Mid-table side with below-average possession, so defensive volume is inflated and passing volume understated.
+  reference_line: mean           # mean | median in scatters
+  scatter_labels: 4
+
+rating:                          # 1 to 10
+  current: 6
+  potential: 8
+
+# Level ladder keys from config/grading.yaml. `club` is the level you recruit for.
+level:
+  current: L5
+  potential: L3
+  club: L3
+  horizon: 2 to 3 years
+
+# Four-corner grades, 1 to 5, relative to the club level (see config/grading.yaml).
+grades:
+  Technical:
+    Passing range: 4
+    First touch under pressure: 3
+    Heading: 4
+  Tactical:
+    Reading of play: 4
+    Defensive positioning: 3
+    Depth management: 2
+  Physical:
+    Aerial reach: 4
+    Recovery speed: 3
+    Strength in contact: 2
+  Psychological:
+    Composure on the ball: 4
+    Concentration: 3
+    Leadership: 2
+
+observations:
+  - {date: 2026-09-13, opponent: Radnik Vale, competition: Demo Liga, mode: video, minutes: 90, grade: 4}
+  - {date: 2026-09-27, opponent: Sloga Brod, competition: Demo Liga, mode: video, minutes: 90, grade: 3}
+  - {date: 2026-10-04, opponent: Dinamo Verst, competition: Demo Liga, mode: live, minutes: 90, grade: 4}
+  - {date: 2026-10-18, opponent: Union Nordtal, competition: Cup, mode: video, minutes: 71, grade: 3}
+
+# Extra comparison players to name in the scatters (Wyscout spelling).
+highlight_players: []
+
+scouting:
+  summary:
+    - Left-footed centre-back with a long, rangy frame and quick feet for his size. Comfortable defending on the half-turn.
+    - Central to his team's build-up, breaking the first line with forward passes from deep. Reads danger early and wins most aerial contests in his zone.
+    - Seventeen and already a regular at senior level on loan. Capped from U15 to U18 at youth international level.
+
+  projection: A starting left centre-back at our level within two to three years, if his contact strength develops. The passing and reading of play are already there; the body is the open question.
+
+  strengths:
+    - Breaks lines with forward passes
+    - Early reads and interceptions
+    - Aerial presence in his own box
+    - Fast reaction after turnovers
+
+  development:
+    - Strength in contact
+    - Patience before engaging 1v1
+    - Managing depth against runners
+
+  risks:
+    - Price likely to rise after U19 call-up
+    - Untested against physical front lines
+    - Agent unknown, clarify before contact
+
+  in_possession:
+    - title: Passing range
+      text: Takes the ball on the half-turn and looks forward first. Mixes firm passes into the pivot with diagonals to the far side.
+      clips: ["13' vs Radnik", "61' vs Dinamo"]
+    - title: Carrying
+      text: Rarely steps into midfield with the ball. When the lane closes he recycles to the goalkeeper instead.
+      clips: ["38' vs Sloga"]
+    - title: Set pieces
+      text: Attacks the near post on corners and wins first contact regularly.
+      clips: ["24' vs Dinamo"]
+
+  out_of_possession:
+    - title: Anticipation
+      text: Scans early and leaves his line to intercept balls into the striker, starting quick transitions.
+      clips: ["8' vs Radnik", "52' vs Union"]
+    - title: Aerial duels
+      text: Times his jump well. Loses contests when stronger forwards make contact before the ball arrives.
+      clips: ["70' vs Sloga"]
+    - title: Engagement timing
+      text: Commits too early in 1v1s. When bypassed, the space behind him opens for a second runner.
+      clips: ["33' vs Dinamo", "79' vs Sloga"]
+
+  # evidence: both | video | data. Shows whether video and data agree.
+  interpretation:
+    - text: Among the most progressive passers in the pool with above-average accuracy. Final-third passing is weaker, matching a player who breaks the first line rather than the last.
+      evidence: both
+    - text: Top-end interception volume backs the anticipation seen on video, though part of it reflects low team possession.
+      evidence: both
+    - text: Psychological read is video only. Recovers quickly after errors and keeps demanding the ball.
+      evidence: video
