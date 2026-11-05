@@ -25,6 +25,12 @@ small { font-size: 0.78em; color: var(--muted); font-weight: 500; }
 .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 12px; }
 .block-head h2 { margin-bottom: 0; }
 
+/* drafted from data, and sections still waiting for video work */
+.draft-tag { margin-left: 10px; font-family: var(--body); font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.pending { font-size: 15px; color: var(--muted); line-height: 1.4; }
+.decision .pending { color: var(--verdict-ink); opacity: 0.72; margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--verdict-ink) 25%, transparent); }
+
 /* ------------------------------------------------------------------ brand + footer */
 .brand { display: flex; align-items: center; justify-content: flex-end; }
 .brand img { max-height: 54px; max-width: 340px; }

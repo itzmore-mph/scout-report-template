@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import mimetypes
+import numbers
 import re
 import unicodedata
 from datetime import date, datetime
@@ -13,7 +14,8 @@ import pandas as pd
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from . import brand as brand_mark, charts, data
+from . import brand as brand_mark, charts, data, drafts
+from .drafts import ordinal
 
 ROOT = Path(__file__).resolve().parent.parent
 PAGE_W, PAGE_H = 1920, 1080
@@ -90,7 +92,7 @@ def pick(override, row: pd.Series, col: str | None, zero_missing: bool = False):
         return override
     if col and col in row.index and not pd.isna(row[col]):
         value = row[col]
-        if zero_missing and isinstance(value, (int, float)) and value == 0:
+        if zero_missing and isinstance(value, numbers.Number) and value == 0:
             return None
         if isinstance(value, str) and value.strip().lower() in {"", "unknown", "-"}:
             return None
@@ -146,11 +148,6 @@ def build_ladder(level: dict, grading: dict) -> dict:
         line = (f"Level now: {by_key[cur]['label']} ({cur}). "
                 f"Potential: {by_key[pot]['label']} ({pot}){rel}{when}.")
     return {"rungs": rungs, "verdict": verdict, "horizon": level.get("horizon"), "line": line}
-
-
-def ordinal(n: int) -> str:
-    suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
-    return f"{n}{suffix}"
 
 
 def data_findings(profile: list[dict], role: dict, role_name: str, group_label: str) -> list[dict]:
@@ -244,6 +241,8 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
     minutes = pick(None, row, cols["minutes"])
     matches = pick(None, row, cols.get("matches"))
     age = age_on(dob, report_date) if dob else pick(None, row, cols.get("age"))
+    foot = pick(player.get("foot"), row, cols.get("foot"))
+    market_value = pick(player.get("market_value"), row, cols.get("market_value"), zero_missing=True)
     physical = " / ".join(x for x in [f"{int(height)} cm" if height else None,
                                        f"{int(weight)} kg" if weight else None] if x) or "-"
 
@@ -266,18 +265,62 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
     if pool.target_below_threshold:
         notes.append(f"Below the {pool.min_minutes}-minute threshold: treat the data as indicative.")
 
+    # Unedited TEMPLATE.yaml prompts count as unwritten: they are hidden or replaced by data drafts.
+    tpl = drafts.load_template()
+    tpl_player, tpl_ctx, tpl_scouting = (tpl.get(k) or {} for k in ("player", "context", "scouting"))
+    auto = ctx.get("auto_drafts", True) is not False
+
+    def written(value, tpl_value):
+        return None if drafts.is_unwritten(value, tpl_value) else value
+
     def items(key):
-        return [i if isinstance(i, dict) else {"text": i} for i in scouting.get(key, []) or []]
+        raw = [i if isinstance(i, dict) else {"text": i} for i in scouting.get(key, []) or []]
+        return drafts.clean_list(raw, tpl_scouting.get(key))
+
+    for key in ("name", "club"):
+        if drafts.is_unwritten(player.get(key), tpl_player.get(key)):
+            print(f"  ! player.{key} is empty or still the TEMPLATE prompt")
+    pool_label = ", ".join(leagues) if leagues else ctx.get("league", "")
+    role_written = written(player.get("role"), tpl_player.get("role"))
+    league_label = written(ctx.get("league"), tpl_ctx.get("league")) or pool_label
+    fit = {k: written(ctx.get(k), tpl_ctx.get(k)) for k in ("suitability", "adaptation", "next_action", "team_context")}
+    projection = written(scouting.get("projection"), tpl_scouting.get("projection"))
+
+    keys = ("summary", "strengths", "development", "risks", "in_possession", "out_of_possession", "interpretation")
+    lists = {k: items(k) for k in keys}
+    drafted: dict[str, list[dict]] = {}
+    if auto:
+        makers = {
+            "summary": lambda: drafts.draft_summary(
+                age, foot, role_written or template.get("role", template["label"]), player.get("position_code"),
+                height, minutes, league_label, ctx.get("season"), role),
+            "strengths": lambda: drafts.draft_strengths(profile),
+            "development": lambda: drafts.draft_development(profile),
+            "risks": lambda: drafts.draft_risks(
+                contract, report_date, pool, minutes, market_value is None, role,
+                drafts.compare_role(df, player, ctx, template_key, codes, template, report.get("columns"),
+                                    row.get(cols["team"]))),
+        }
+        for key, make in makers.items():
+            if not lists[key]:
+                lists[key] = make()
+                if lists[key]:
+                    drafted[key] = lists[key]
 
     evidence_labels = {"both": "Video + data", "video": "Video only", "data": "Data only"}
     findings = data_findings(profile, role, template.get("role", template["label"]), template["label"].lower() + "s")
-    print("  data findings (paste into `interpretation` and add your video view):")
-    for f in findings:
-        print(f"    - {f['text']}")
-    written = items("interpretation")
-    interpretation_auto = not written
-    interpretation = [{**i, "evidence_label": evidence_labels.get(i.get("evidence"))} for i in (written or findings)]
-    pool_label = ", ".join(leagues) if leagues else ctx.get("league", "")
+    interpretation_auto = auto and not lists["interpretation"]
+    if interpretation_auto:
+        lists["interpretation"] = drafted["interpretation"] = [{**f, "draft": True} for f in findings]
+    else:
+        print("  data findings (paste into `interpretation` and add your video view):")
+        for f in findings:
+            print(f"    - {f['text']}")
+    interpretation = [{**i, "evidence_label": evidence_labels.get(i.get("evidence"))} for i in lists["interpretation"]]
+    if drafted:
+        print(f"  data drafts (paste into {report_path.name} under `scouting:`, then edit):")
+        for line in drafts.yaml_snippet(drafted).splitlines():
+            print(f"    {line}")
     brand = theme_cfg["brand"]
     logo_inner, logo_w, logo_h = brand_mark.lockup(brand["name"], brand.get("tagline"), theme["text"],
                                                    theme["muted"], theme["target"])
@@ -296,10 +339,11 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
             "initials": initials(player["name"]),
             "dob": dob.strftime("%d/%m/%Y") if dob else "-",
             "age": int(age) if age is not None and not pd.isna(age) else None,
-            "foot": str(pick(player.get("foot"), row, cols.get("foot")) or "-").capitalize(),
+            "role": role_written,
+            "foot": str(foot or "-").capitalize(),
             "physical": physical,
             "nationality": player.get("nationality") or pick(None, row, cols.get("passport")) or "-",
-            "market_value": fmt_value(pick(player.get("market_value"), row, cols.get("market_value"), zero_missing=True)),
+            "market_value": fmt_value(market_value),
             "contract": contract.strftime("%m/%Y") if contract else "-",
             "agent": player.get("agent") or "-",
             "secondary_positions": player.get("secondary_positions") or [],
@@ -308,6 +352,8 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
         },
         "ctx": {
             **ctx,
+            **fit,
+            "league": league_label,
             "data_date_str": data_date.strftime("%d %b %Y").lstrip("0"),
             "report_date_str": report_date.strftime("%d %b %Y").lstrip("0"),
             "minutes": int(minutes) if minutes is not None else "-",
@@ -324,8 +370,7 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
         "ladder": build_ladder(level, grading) if level else None,
         "confidence": build_confidence(report.get("observations", []) or [], minutes, pool.n, grading),
         "observations": observations,
-        "scouting": {**scouting, "in_possession": items("in_possession"),
-                     "out_of_possession": items("out_of_possession"), "interpretation": interpretation},
+        "scouting": {**scouting, **lists, "projection": projection, "interpretation": interpretation},
         "pizza_svg": pizza_svg,
         "pizza_engine": pizza_engine,
         "categories": categories,

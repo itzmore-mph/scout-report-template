@@ -27,9 +27,35 @@ Everything computed from the export: pizza, percentiles, role score and rank, sc
 pool size and warnings, facts the YAML leaves empty, the level line and the confidence rating.
 
 Written scouting text does not: summary, projection, strengths, observations and fit come from your video
-work and stay in the YAML. The one exception is the data and video section: while `interpretation` is empty
+work and stay in the YAML. Until you write them, the data drafts below stand in where the data allows. One more exception is the data and video section: while `interpretation` is empty
 it shows auto-generated data findings (standout metrics, clear weaknesses, role score), and every run prints
 them in the console so you can paste them into the YAML and add the video view.
+
+**Data drafts.** A field counts as unwritten when it is empty or still holds the prompt text from
+`reports/TEMPLATE.yaml`. Unwritten fields that the data can support are pre-filled and tagged "Data draft":
+
+- `strengths`: metrics at or above the 80th percentile, highest first, up to 4.
+- `development`: metrics at or below the 25th percentile, lowest first, up to 3. None qualifying means
+  the list stays empty.
+- `risks`: facts only. Contract ending within 12 months of `report_date`, target below `min_minutes`,
+  pool n < 20, market value missing in Wyscout and the YAML, and a role score drop in a second pool
+  (see `compare_leagues` below).
+- `summary`: one factual first bullet (age, foot, role, position, height, minutes, league, role score and
+  rank). The other bullets are yours to write.
+
+Everything that needs video stays manual and is hidden while it is still a prompt: projection, fit,
+adaptation, next step, team context, in and out of possession traits, and grade corners without grades.
+A block left with nothing to show reads "To be completed after video review." Written content always wins
+over a draft, and every run prints the drafts as a YAML snippet to paste into the player file and edit.
+The YAML file is never changed by the generator.
+
+Context options:
+
+- `auto_drafts: false` turns all drafts off, including the auto-generated data findings.
+- `compare_leagues: [Poland Ekstraklasa 2026-27]` builds a second pool (same position group) and
+  compares the role score. A risk line is added if the role score percentile drops by 30 points or more,
+  or the score drops by 0.5 or more. If the player is not in that pool, nothing is added.
+- `compare_min_minutes` sets the minutes threshold for that pool (default 450).
 
 Page 1 works on its own for a sporting director. The two-page limit follows standard practice for detailed
 reports: longer reports get skimmed.
@@ -116,7 +142,7 @@ Ausgabe in `output/<spieler>-<position>/`: PDF, PNG pro Seite und HTML.
 |---|---|
 | Summary | 3 bullets, 15 to 25 words each |
 | Projection | 2 to 3 sentences |
-| Strengths / areas to develop / risks | 3 to 4 items each, up to 7 words |
+| Strengths / areas to develop / risks | 3 to 4 items each, up to 7 words (data drafts can run longer) |
 | Fit, adaptation, next action | 1 sentence each |
 | Grades | 3 attributes per corner, names up to 22 characters |
 | In / out of possession | 3 traits each, 12 to 20 words, up to 2 clip references |

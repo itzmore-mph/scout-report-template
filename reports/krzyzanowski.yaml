@@ -34,6 +34,7 @@ context:
   report_date: 2026-11-05
   scout: Moritz Philipp Haaf
   min_minutes: 600
+  compare_leagues: [Poland Ekstraklasa 2026-27]  # current season, for the role-score comparison risk
   recommendation: Continue scouting  # Sign | Monitor | Continue scouting | Discard
   suitability: How he fits our game model and which role he would fill.
   adaptation: Expected time to impact, e.g. 6 to 12 months, and what drives it.

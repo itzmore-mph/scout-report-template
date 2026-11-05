@@ -33,6 +33,10 @@ context:
   report_date:
   scout: Moritz Philipp Haaf
   min_minutes: 600
+  # auto_drafts: true              # false = no data drafts; unwritten prompts are still hidden
+  # compare_leagues: [Poland Ekstraklasa 2026-27]  # second pool, e.g. the current season; adds a risk
+  #                                # line if the role score drops clearly in that pool
+  # compare_min_minutes: 450       # minutes threshold for the compare pool (default 450)
   recommendation: Continue scouting  # Sign | Monitor | Continue scouting | Discard
   suitability: How he fits our game model and which role he would fill.
   adaptation: Expected time to impact, e.g. 6 to 12 months, and what drives it.

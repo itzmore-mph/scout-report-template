@@ -38,10 +38,15 @@
 </footer>
 {% endmacro %}
 
+{% macro draft_tag(items) %}{% if items | selectattr("draft") | list %}<span class="draft-tag">Data draft</span>{% endif %}{% endmacro %}
+
+{% macro pending() %}<p class="pending">To be completed after video review.</p>{% endmacro %}
+
 {% macro list_block(title, items, kind) %}
 <div class="sublist" data-fit="{{ title | lower }}">
-  <h3>{{ title }}</h3>
-  <ul class="marked {{ kind }}">{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>
+  <h3>{{ title }}{{ draft_tag(items) }}</h3>
+  {% if items %}<ul class="marked {{ kind }}">{% for item in items %}<li>{{ item.text }}</li>{% endfor %}</ul>
+  {% else %}{{ pending() }}{% endif %}
 </div>
 {% endmacro %}
 
@@ -91,16 +96,19 @@
         </div>
         {% if ladder and ladder.line %}<p class="level-line">{{ ladder.line }}</p>{% endif %}
         {% if scouting.projection %}<p class="projection-text">{{ scouting.projection }}</p>{% endif %}
+        {% if ctx.suitability or ctx.adaptation or ctx.next_action %}
         <dl class="fit">
           {% if ctx.suitability %}<div><dt>Fit</dt><dd>{{ ctx.suitability }}</dd></div>{% endif %}
           {% if ctx.adaptation %}<div><dt>Adaptation</dt><dd>{{ ctx.adaptation }}</dd></div>{% endif %}
           {% if ctx.next_action %}<div><dt>Next step</dt><dd>{{ ctx.next_action }}</dd></div>{% endif %}
         </dl>
+        {% elif not scouting.projection %}{{ pending() }}{% endif %}
       </section>
 
       <section class="block" data-fit="summary">
-        <h2>Summary</h2>
-        <ul class="bullets">{% for item in scouting.summary %}<li>{{ item }}</li>{% endfor %}</ul>
+        <h2>Summary{{ draft_tag(scouting.summary) }}</h2>
+        {% if scouting.summary %}<ul class="bullets">{% for item in scouting.summary %}<li>{{ item.text }}</li>{% endfor %}</ul>
+        {% else %}{{ pending() }}{% endif %}
       </section>
 
       <section class="block lists">
@@ -150,8 +158,10 @@
         <h2>Four-corner grades</h2>
         <span class="sub">vs our level{% if club_level %}, {{ club_level.label }}{% endif %}</span>
       </div>
+      {% set graded = grades | selectattr("avg") | list %}
+      {% if graded %}
       <div class="corners">
-        {% for c in grades %}
+        {% for c in graded %}
         <div class="corner">
           <h3>{{ c.name }}{% if c.avg %}<span class="avg">{{ "%.1f" | format(c.avg) }}</span>{% endif %}</h3>
           {% for a in c.attributes %}
@@ -164,6 +174,7 @@
         {% endfor %}
       </div>
       <p class="scale"><span>vs our level:</span>{% for k, v in grade_scale.items() | sort %}<span><b>{{ k }}</b> {{ v | replace(' our level', '') | lower }}</span>{% endfor %}</p>
+      {% else %}{{ pending() }}{% endif %}
       <div class="log-head">
         <h3>Observation log</h3>
         <span class="conf conf-{{ confidence.score }}"><i></i><i></i><i></i>{{ confidence.level }} confidence</span>
@@ -193,16 +204,19 @@
     <section class="block interp" data-fit="data and video">
       <div class="block-head"><h2>Data and video</h2>{% if interpretation_auto %}<span class="sub">Auto-generated from data, add your video view</span>{% endif %}</div>
       {% if ctx.team_context %}<p class="team-context"><b>Team context.</b> {{ ctx.team_context }}</p>{% endif %}
+      {% if scouting.interpretation %}
       <ul class="evidence">
         {% for i in scouting.interpretation %}
         <li>{% if i.evidence_label %}<span class="ev ev-{{ i.evidence }}">{{ i.evidence_label }}</span>{% endif %}<p>{{ i.text }}</p></li>
         {% endfor %}
       </ul>
+      {% elif not ctx.team_context %}{{ pending() }}{% endif %}
     </section>
 
     {% for title, key in [("In possession", "in_possession"), ("Out of possession", "out_of_possession")] %}
     <section class="block phase" data-fit="{{ title | lower }}">
       <h2>{{ title }}</h2>
+      {% if not scouting[key] %}{{ pending() }}{% endif %}
       <dl class="traits">
         {% for t in scouting[key] %}
         <div>
