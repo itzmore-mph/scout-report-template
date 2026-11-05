@@ -14,6 +14,8 @@ from scout_report.render import render
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("report", help="Report YAML with player details and scouting notes")
     parser.add_argument("export", help="Wyscout export (.xlsx or .csv) of the comparison league")

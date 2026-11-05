@@ -19,6 +19,11 @@ logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 
 def configure(fonts: dict) -> None:
     """Keep SVG text as live text so the browser renders it with the report fonts."""
+    from pathlib import Path
+    from matplotlib import font_manager
+    font_dir = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+    for f in font_dir.glob("*.otf"):
+        font_manager.fontManager.addfont(str(f))
     plt.rcParams.update({
         "svg.fonttype": "none",
         "font.family": [fonts.get("body", "Inter"), "DejaVu Sans"],
@@ -85,6 +90,7 @@ def pizza_chart(profile: list[dict], theme: dict, cuts: dict, size: float = 7.6)
         PyPizza = None
 
     if PyPizza is not None:
+      try:
         baker = PyPizza(
             params=params, background_color=theme["panel"],
             straight_line_color=theme["panel"], straight_line_lw=1.5,
@@ -103,6 +109,9 @@ def pizza_chart(profile: list[dict], theme: dict, cuts: dict, size: float = 7.6)
             text.set_color(color)
         fig.patch.set_alpha(0)
         return _to_svg(fig), "mplsoccer"
+      except Exception as exc:  # noqa: BLE001
+        plt.close("all")
+        print(f"  ! mplsoccer PyPizza failed ({exc}); using the built-in pizza instead")
 
     # Fallback with PyPizza's geometry: slices clockwise from 12 o'clock, tangential labels
     # flipped in the lower half so they stay readable.

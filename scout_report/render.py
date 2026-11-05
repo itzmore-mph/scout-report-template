@@ -359,6 +359,12 @@ def render(report_path: str | Path, export_path: str | Path, out_dir: str | Path
 
     env = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=select_autoescape(["html", "j2"]))
     css = (ROOT / "templates" / "report.css").read_text(encoding="utf-8")
+    faces = []
+    for f in sorted((ROOT / "assets" / "fonts").glob("*.otf")):
+        family = "Inter Display" if f.stem.startswith("InterDisplay") else "Inter"
+        weight = {"Regular": 400, "Medium": 500, "SemiBold": 600, "Bold": 700, "ExtraBold": 800}[f.stem.split("-")[1]]
+        faces.append(f'@font-face {{ font-family: "{family}"; font-weight: {weight}; src: local("{family} {f.stem.split("-")[1]}"), url("{f.as_uri()}"); }}')
+    css = "\n".join(faces) + "\n" + css
     html = env.get_template("report.html.j2").render(**context, css=css)
 
     slug = slugify(f"{context['player']['name']} {context['player'].get('position_code', '')}")

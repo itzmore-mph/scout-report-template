@@ -19,7 +19,8 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.path import Path as MplPath
 from matplotlib.textpath import TextPath
 
-FONT_DIR = Path("/usr/share/fonts/opentype/inter")
+FONT_DIRS = [Path(__file__).resolve().parent.parent / "assets" / "fonts",
+             Path("/usr/share/fonts/opentype/inter")]
 FONT_NAME = "InterDisplay-ExtraBold.otf"
 FONT_TAG = "Inter-SemiBold.otf"
 
@@ -34,10 +35,10 @@ GAP = 18.0
 
 
 def _font_path(name: str) -> str:
-    path = FONT_DIR / name
-    if not path.exists():
-        raise FileNotFoundError(f"Logo font missing: {path}. Install Inter / Inter Display.")
-    return str(path)
+    for folder in FONT_DIRS:
+        if (folder / name).exists():
+            return str(folder / name)
+    raise FileNotFoundError(f"Logo font missing: {name}. Expected in assets/fonts/.")
 
 
 def _to_d(tp: TextPath, dx: float = 0.0) -> str:
