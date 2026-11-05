@@ -68,6 +68,7 @@ small { font-size: 0.78em; color: var(--muted); font-weight: 500; }
 .pos.primary { background: var(--target); border-color: var(--target); color: var(--verdict-ink); }
 .role { margin-left: 8px; font-size: 15px; color: var(--muted); font-weight: 600; }
 .name { font-size: 62px; font-weight: 750; letter-spacing: -0.035em; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name.long { font-size: 50px; }
 .club { font-size: 18px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
 .club strong { color: var(--text); font-weight: 650; }
 .club .badge { height: 28px; }

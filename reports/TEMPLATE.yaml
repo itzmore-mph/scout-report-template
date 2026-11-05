@@ -57,6 +57,8 @@ level:                             # ladder keys from config/grading.yaml
 
 # 1 to 5, relative to our level. Pick the three attributes per corner that
 # matter most for the role (from your positional profile).
+# grades_source: data              # optional before video: grades are percentile bands of 20
+# grades_pool: Ekstraklasa FB percentiles  #   from a data proxy, labelled "not vs our level"
 grades:
   Technical:
     Passing range:

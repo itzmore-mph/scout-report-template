@@ -64,7 +64,7 @@
         {% for p in player.secondary_positions %}<span class="pos">{{ p }}</span>{% endfor %}
         {% if player.role %}<span class="role">{{ player.role }}</span>{% endif %}
       </div>
-      <h1 class="name">{{ player.name }}</h1>
+      <h1 class="name{% if player.name | length > 15 %} long{% endif %}">{{ player.name }}</h1>
       <p class="club">
         {% if player.badge_uri %}<img class="badge" src="{{ player.badge_uri }}" alt="">{% endif %}
         <span><strong>{{ player.club }}</strong>{% if player.loan_club %}, on loan at {{ player.loan_club }}{% endif %}</span>
@@ -156,7 +156,8 @@
     <section class="block grades" data-fit="grades and observation log">
       <div class="block-head">
         <h2>Four-corner grades</h2>
-        <span class="sub">vs our level{% if club_level %}, {{ club_level.label }}{% endif %}</span>
+        {% if grades_source == "data" %}<span class="sub">Data proxy, not vs our level</span>
+        {% else %}<span class="sub">vs our level{% if club_level %}, {{ club_level.label }}{% endif %}</span>{% endif %}
       </div>
       {% set graded = grades | selectattr("avg") | list %}
       {% if graded %}
@@ -173,7 +174,11 @@
         </div>
         {% endfor %}
       </div>
+      {% if grades_source == "data" %}
+      <p class="scale"><span>{{ grades_pool or "Percentile band" }}:</span>{% for k, v in [(1, "under 20"), (2, "20 to 40"), (3, "40 to 60"), (4, "60 to 80"), (5, "80 and above")] %}<span><b>{{ k }}</b> {{ v }}</span>{% endfor %}</p>
+      {% else %}
       <p class="scale"><span>vs our level:</span>{% for k, v in grade_scale.items() | sort %}<span><b>{{ k }}</b> {{ v | replace(' our level', '') | lower }}</span>{% endfor %}</p>
+      {% endif %}
       {% else %}{{ pending() }}{% endif %}
       <div class="log-head">
         <h3>Observation log</h3>

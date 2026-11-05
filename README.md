@@ -57,6 +57,12 @@ Context options:
   or the score drops by 0.5 or more. If the player is not in that pool, nothing is added.
 - `compare_min_minutes` sets the minutes threshold for that pool (default 450).
 
+Data proxy grades: before any video, you can grade attributes that have a Wyscout metric behind them by
+percentile band (1 = under the 20th, 5 = 80th and above) and set `grades_source: data` with an optional
+`grades_pool` label. The grades block then reads "Data proxy, not vs our level" and the scale shows the
+bands. Leave corners without a metric empty; they stay hidden. Switch back to video grades vs our level
+(remove `grades_source`) once you have watched the player.
+
 Page 1 works on its own for a sporting director. The two-page limit follows standard practice for detailed
 reports: longer reports get skimmed.
 

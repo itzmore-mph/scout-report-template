@@ -258,6 +258,9 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
     level = report.get("level", {}) or {}
     club_level = next((lv for lv in grading["levels"] if lv["key"] == level.get("club")), None)
     rating = report.get("rating", {}) or {}
+    grades_source = report.get("grades_source") or "video"
+    if grades_source not in ("video", "data"):
+        raise ValueError(f"grades_source '{grades_source}' must be 'video' or 'data'")
 
     notes = []
     if pool.n < 20:
@@ -366,6 +369,8 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
         "rating": {**rating, "max": grading.get("rating_max", 10)},
         "grades": build_grades(report.get("grades"), grading),
         "grade_scale": grading["grade_scale"],
+        "grades_source": grades_source,
+        "grades_pool": report.get("grades_pool"),
         "club_level": club_level,
         "ladder": build_ladder(level, grading) if level else None,
         "confidence": build_confidence(report.get("observations", []) or [], minutes, pool.n, grading),
