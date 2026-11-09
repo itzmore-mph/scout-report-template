@@ -83,6 +83,11 @@ def _ranked(profile: list[dict]) -> list[dict]:
     return sorted([m for m in profile if not pd.isna(m["percentile"])], key=lambda m: -m["percentile"])
 
 
+def role_value(role: dict) -> str:
+    """Role score as shown on the report: pool percentile out of 100, e.g. '97/100'."""
+    return f"{round(role['percentile'])}/100"
+
+
 def league_name(value: str) -> str:
     """'Poland Ekstraklasa 2026-27' -> 'Poland Ekstraklasa'."""
     return re.sub(r"\s+\d{4}(-\d{2,4})?$", "", str(value)).strip()
@@ -90,14 +95,14 @@ def league_name(value: str) -> str:
 
 # --------------------------------------------------------------------------- drafts
 
-def draft_strengths(profile: list[dict]) -> list[dict]:
-    """Metrics at or above the 80th percentile, highest first, max 4."""
-    return [_draft(metric_line(m)) for m in _ranked(profile) if m["percentile"] >= 80][:4]
+def draft_strengths(profile: list[dict], cuts: dict) -> list[dict]:
+    """Metrics in the top tier (default 80th percentile and above), highest first, max 4."""
+    return [_draft(metric_line(m)) for m in _ranked(profile) if m["percentile"] >= cuts["strong"]][:4]
 
 
-def draft_development(profile: list[dict]) -> list[dict]:
-    """Metrics at or below the 25th percentile, lowest first, max 3. Empty if none."""
-    return [_draft(metric_line(m)) for m in reversed(_ranked(profile)) if m["percentile"] <= 25][:3]
+def draft_development(profile: list[dict], cuts: dict) -> list[dict]:
+    """Metrics in the bottom tier (default 20th percentile and below), lowest first, max 3. Empty if none."""
+    return [_draft(metric_line(m)) for m in reversed(_ranked(profile)) if m["percentile"] <= cuts["weak"]][:3]
 
 
 def compare_role(df: pd.DataFrame, player: dict, ctx: dict, template_key: str, codes: list[str],
@@ -134,8 +139,8 @@ def draft_risks(contract: date | None, report_date: date, pool: data.Pool, minut
         score_drop = role["score"] - compare["score"]
         if pct_drop >= 30 or score_drop >= 0.5:
             target = ", ".join(league_name(l) for l in compare["leagues"])
-            out.append(f"Role score fell from {role['score']:+.2f} ({role['rank']}/{role['n']}) to "
-                       f"{compare['score']:+.2f} ({compare['rank']}/{compare['n']}) after the move to {target}")
+            out.append(f"Role score fell from {role_value(role)} ({role['rank']}/{role['n']}) to "
+                       f"{role_value(compare)} ({compare['rank']}/{compare['n']}) after the move to {target}")
     return [_draft(t) for t in out]
 
 
@@ -157,7 +162,7 @@ def draft_summary(age, foot, role_name: str, position_code: str, height, minutes
         first += f", {int(height)} cm"
     where = " ".join(str(x) for x in (league, season) if x)
     second = f"{int(minutes):,} minutes in {where}, " if minutes is not None and where else ""
-    second += f"role score {role['score']:+.2f}, rank {role['rank']} of {role['n']}"
+    second += f"role score {role_value(role)}, rank {role['rank']} of {role['n']}"
     second = second[0].upper() + second[1:]
     return [_draft(f"{first}. {second}.")]
 

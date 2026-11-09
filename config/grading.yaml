@@ -1,14 +1,34 @@
 # Club-specific grading model. Edit once to match your club's language;
 # every report then uses the same scale.
 
-# Attribute grades (1 to 5) are always given relative to the club's level
-# (the `club` rung of the level ladder), not in the abstract.
-grade_scale:
+# One 1 to 7 scale for the overall rating (current, potential), the attribute
+# grades and the match grades in the observation log. Every point is relative
+# to the club's level (the `club` rung of the level ladder), not abstract:
+# 4 means "at our level". The level ladder below says which level that is.
+scale:
+  7: Elite, far above our level
+  6: Well above our level
   5: Above our level
   4: At our level
   3: Close to our level
   2: Below our level
   1: Well below our level
+
+# Pip colours: green at or above `good`, red at or below `bad`, neutral between.
+scale_tones:
+  video: {good: 4, bad: 2}      # graded vs our level: green = at our level or better
+  data:  {good: 6, bad: 2}      # data proxy bands: green = top 20%, red = bottom 20%
+
+# Data proxy grades (grades_source: data): percentile band per scale point.
+# 6 and 7 match the green tier (top 20%), 1 and 2 the red tier (bottom 20%).
+data_bands:
+  7: 90 and above
+  6: 80 to 90
+  5: 60 to 80
+  4: 40 to 60
+  3: 20 to 40
+  2: 10 to 20
+  1: under 10
 
 # Four-corner model. Attributes are free text in each report; these are
 # the corner names and the order they appear in.
@@ -44,6 +64,3 @@ confidence:
 
 # Verdicts, in the order clubs use them to move a player through the process.
 verdicts: [Sign, Monitor, Continue scouting, Discard]
-
-# Overall ratings (current ability and potential) use this scale.
-rating_max: 10

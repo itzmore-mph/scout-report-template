@@ -74,7 +74,7 @@ small { font-size: 0.78em; color: var(--muted); font-weight: 500; }
 .club .badge { height: 28px; }
 
 .facts {
-  display: grid; grid-template-columns: 0.8fr 1fr 0.8fr 1.35fr; grid-template-rows: 1fr 1fr; gap: 0 24px;
+  display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1.3fr); grid-template-rows: 1fr 1fr; gap: 0 24px;
   border-left: 1px solid var(--line); padding-left: 30px;
 }
 .facts div { display: flex; flex-direction: column; justify-content: center; gap: 3px; min-width: 0; }
@@ -98,6 +98,7 @@ small { font-size: 0.78em; color: var(--muted); font-weight: 500; }
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .fit dt { font-size: 14px; font-weight: 700; opacity: 0.72; margin-bottom: 3px; }
 .fit dd { font-size: 15.5px; line-height: 1.38; font-weight: 550; }
+.scale-key { margin-top: 12px; font-size: 13px; font-weight: 550; opacity: 0.72; }
 
 .ladder { display: flex; flex-direction: column; }
 .ladder .block-head .sub { text-align: right; }
@@ -141,6 +142,7 @@ small { font-size: 0.78em; color: var(--muted); font-weight: 500; }
 .role-score .k { font-size: 15px; color: var(--text); }
 .role-def { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
 .role-score .score { font-family: var(--display); font-size: 28px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.role-score .score small { font-size: 15px; margin-left: 4px; }
 .role-score .score.good { color: var(--good); }
 .role-score .score.bad { color: var(--bad); }
 .role-score .rank { font-size: 15px; font-weight: 600; color: var(--muted); }
@@ -179,10 +181,10 @@ small { font-size: 0.78em; color: var(--muted); font-weight: 500; }
 .corner { min-width: 0; }
 .attr-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pips { display: inline-flex; gap: 3px; flex-shrink: 0; }
-.pips i { width: 15px; height: 9px; border-radius: 2px; background: var(--line); }
-.pips.g5 i.on, .pips.g4 i.on { background: var(--good); }
-.pips.g3 i.on { background: var(--text); }
-.pips.g2 i.on, .pips.g1 i.on { background: var(--bad); }
+.pips i { width: 10px; height: 9px; border-radius: 2px; background: var(--line); }
+.pips.good i.on { background: var(--good); }
+.pips.mid i.on { background: var(--text); }
+.pips.bad i.on { background: var(--bad); }
 .scale { margin: 10px 0 14px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); }
 .scale b { color: var(--text); font-weight: 700; margin-right: 3px; }
 

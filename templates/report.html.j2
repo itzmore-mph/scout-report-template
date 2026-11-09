@@ -103,6 +103,7 @@
           {% if ctx.next_action %}<div><dt>Next step</dt><dd>{{ ctx.next_action }}</dd></div>{% endif %}
         </dl>
         {% elif not scouting.projection %}{{ pending() }}{% endif %}
+        {% if rating.current or rating.potential or (ladder and ladder.line) %}<p class="scale-key">{{ scale_key }}</p>{% endif %}
       </section>
 
       <section class="block" data-fit="summary">
@@ -130,8 +131,8 @@
         <ul class="tiers">{% for t in tiers %}<li><i style="background: {{ t.color }}"></i>{{ t.label }}</li>{% endfor %}</ul>
       </div>
       <div class="role-score">
-        <div><span class="k">Role score, {{ role.name | lower }}</span><span class="role-def">Weighted z-score, 0 = pool average</span></div>
-        <span class="score {{ 'good' if role.score >= 0.5 else 'bad' if role.score <= -0.5 else '' }}">{{ "%+.2f" | format(role.score) }}</span>
+        <div><span class="k">Role score, {{ role.name | lower }}</span><span class="role-def">Pool percentile of the weighted z-score ({{ "%+.2f" | format(role.score) }}), 50 = pool average</span></div>
+        <span class="score {{ 'good' if role.tone == 'strong' else 'bad' if role.tone == 'weak' else '' }}">{{ role.percentile | round | int }}<small>/ 100</small></span>
         <span class="rank">Rank {{ role.rank }} of {{ role.n }}</span>
       </div>
       {% for note in notes %}<p class="caution">{{ note }}</p>{% endfor %}
@@ -157,7 +158,7 @@
       <div class="block-head">
         <h2>Four-corner grades</h2>
         {% if grades_source == "data" %}<span class="sub">Data proxy, not vs our level</span>
-        {% else %}<span class="sub">vs our level{% if club_level %}, {{ club_level.label }}{% endif %}</span>{% endif %}
+        {% else %}<span class="sub">1 to {{ scale_max }} vs our level{% if club_level %}, {{ club_level.label }}{% endif %}</span>{% endif %}
       </div>
       {% set graded = grades | selectattr("avg") | list %}
       {% if graded %}
@@ -168,16 +169,16 @@
           {% for a in c.attributes %}
           <div class="attr">
             <span class="attr-name">{{ a.name }}</span>
-            <span class="pips g{{ a.grade }}">{% for i in range(1, 6) %}<i class="{{ 'on' if i <= a.grade }}"></i>{% endfor %}</span>
+            <span class="pips {{ a.tone }}">{% for i in range(1, scale_max + 1) %}<i class="{{ 'on' if i <= a.grade }}"></i>{% endfor %}</span>
           </div>
           {% endfor %}
         </div>
         {% endfor %}
       </div>
       {% if grades_source == "data" %}
-      <p class="scale"><span>{{ grades_pool or "Percentile band" }}:</span>{% for k, v in [(1, "under 20"), (2, "20 to 40"), (3, "40 to 60"), (4, "60 to 80"), (5, "80 and above")] %}<span><b>{{ k }}</b> {{ v }}</span>{% endfor %}</p>
+      <p class="scale"><span>{{ grades_pool or "Percentile band" }}:</span>{% for k, v in data_bands.items() | sort %}<span><b>{{ k }}</b> {{ v }}</span>{% endfor %}</p>
       {% else %}
-      <p class="scale"><span>vs our level:</span>{% for k, v in grade_scale.items() | sort %}<span><b>{{ k }}</b> {{ v | replace(' our level', '') | lower }}</span>{% endfor %}</p>
+      <p class="scale">{% for k, v in grade_scale.items() | sort %}<span><b>{{ k }}</b> {{ v.split(",")[0] | replace(" our level", "") | replace(" to", "") | lower }}</span>{% endfor %}</p>
       {% endif %}
       {% else %}{{ pending() }}{% endif %}
       <div class="log-head">
@@ -190,7 +191,7 @@
         {% for o in observations %}
           <tr><td>{{ o.date_str }}</td><td>{{ o.opponent }}{% if o.competition %} <small>{{ o.competition }}</small>{% endif %}</td>
               <td><span class="mode {{ o.mode | lower }}">{{ o.mode }}</span></td>
-              <td class="num">{{ o.minutes }}</td><td class="num">{{ o.grade }}<small>/5</small></td></tr>
+              <td class="num">{{ o.minutes }}</td><td class="num">{{ o.grade or '-' }}<small>/{{ scale_max }}</small></td></tr>
         {% else %}
           <tr><td colspan="5" class="empty">No matches logged. Add them under `observations`.</td></tr>
         {% endfor %}

@@ -15,6 +15,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import brand as brand_mark, charts, data, drafts
+from .config import load_config
 from .drafts import ordinal
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -102,19 +103,50 @@ def pick(override, row: pd.Series, col: str | None, zero_missing: bool = False):
 
 # --------------------------------------------------------------------------- context
 
-def load_config(name: str) -> dict:
-    return yaml.safe_load((ROOT / "config" / name).read_text(encoding="utf-8"))
+def scale_max(grading: dict) -> int:
+    return max(int(k) for k in grading["scale"])
 
 
-def build_grades(raw: dict, grading: dict) -> list[dict]:
-    """Four-corner attribute grades (1 to 5) relative to the club's level."""
+def check_scale(value, what: str, grading: dict) -> int | None:
+    """Validate a value on the unified scale (1 to max). Empty stays None."""
+    if value in (None, ""):
+        return None
+    top = scale_max(grading)
+    if not (isinstance(value, numbers.Number) and 1 <= value <= top and float(value).is_integer()):
+        raise ValueError(f"{what} = {value!r} must be a whole number from 1 to {top} (config/grading.yaml `scale`)")
+    return int(value)
+
+
+def tone(grade: int | None, source: str, grading: dict) -> str:
+    """'good', 'mid' or 'bad' for pip and grade colours."""
+    if not grade:
+        return ""
+    cuts = grading["scale_tones"][source]
+    return "good" if grade >= cuts["good"] else "bad" if grade <= cuts["bad"] else "mid"
+
+
+def build_grades(raw: dict, grading: dict, source: str) -> list[dict]:
+    """Four-corner attribute grades on the unified scale, relative to the club's level."""
     corners = []
     for corner in grading["corners"]:
-        attrs = [{"name": k, "grade": int(v) if v else 0} for k, v in ((raw or {}).get(corner) or {}).items()]
+        attrs = []
+        for name, value in ((raw or {}).get(corner) or {}).items():
+            grade = check_scale(value, f"grades.{corner}.{name}", grading)
+            attrs.append({"name": name, "grade": grade or 0, "tone": tone(grade, source, grading)})
         graded = [a["grade"] for a in attrs if a["grade"]]
         avg = sum(graded) / len(graded) if graded else None
         corners.append({"name": corner, "attributes": attrs, "avg": avg})
     return corners
+
+
+def scale_key(grading: dict, club_level: dict | None) -> str:
+    """One line on how the rating, grades and level ladder relate."""
+    top, levels = scale_max(grading), grading["levels"]
+    at = next((int(k) for k, v in grading["scale"].items() if str(v).lower() == "at our level"), None)
+    our = f" ({club_level['key']}, {club_level['label']})" if club_level else ""
+    anchor = f", {at} = at our level{our}" if at else ""
+    return (f"Scales: rating and grades 1 to {top} vs our level{anchor}. "
+            f"Levels from {levels[0]['key']} {levels[0]['label']} to {levels[-1]['key']} {levels[-1]['label']}.")
 
 
 def build_ladder(level: dict, grading: dict) -> dict:
@@ -150,23 +182,47 @@ def build_ladder(level: dict, grading: dict) -> dict:
     return {"rungs": rungs, "verdict": verdict, "horizon": level.get("horizon"), "line": line}
 
 
-def data_findings(profile: list[dict], role: dict, role_name: str, group_label: str) -> list[dict]:
+def data_findings(profile: list[dict], role: dict, role_name: str, group_label: str, cuts: dict) -> list[dict]:
     """Factual data statements for a new player: standout metrics, clear weaknesses, role score.
 
     They describe output only. The scout adds the video view and the context.
     """
     ranked = sorted([m for m in profile if not pd.isna(m["percentile"])], key=lambda m: -m["percentile"])
     out = []
-    top = [m for m in ranked if m["percentile"] >= 80][:3]
+    top = [m for m in ranked if m["percentile"] >= cuts["strong"]][:3]
     if top:
         parts = [f"{m['label']} {charts.fmt_metric(m['raw'], m['label'])} ({ordinal(round(m['percentile']))})" for m in top]
         out.append(f"Standout output against {group_label}: {', '.join(parts)}.")
-    weak = [m for m in reversed(ranked) if m["percentile"] <= 25][:2]
+    weak = [m for m in reversed(ranked) if m["percentile"] <= cuts["weak"]][:2]
     if weak:
         parts = [f"{m['label']} {charts.fmt_metric(m['raw'], m['label'])} ({ordinal(round(m['percentile']))})" for m in weak]
         out.append(f"Below the pool on {', '.join(parts)}.")
-    out.append(f"Role score {role['score']:+.2f} for the {role_name.lower()} profile, rank {role['rank']} of {role['n']}.")
+    out.append(f"Role score {drafts.role_value(role)} for the {role_name.lower()} profile, rank {role['rank']} of {role['n']}.")
     return [{"text": t, "evidence": "data"} for t in out]
+
+
+def scatter_specs(defaults: list[dict], overrides: list | None) -> list[dict]:
+    """The two scatter pairs: the position template's, replaced slot by slot by the report's `scatters`.
+
+    An empty slot (null or missing) keeps the template pair. Axis labels default to the column header,
+    the title to 'Y vs X'.
+    """
+    overrides = overrides or []
+    if not isinstance(overrides, list):
+        raise ValueError("`scatters` in the report YAML must be a list of up to two pairs")
+    specs = []
+    for i, default in enumerate(defaults[:2]):
+        spec = overrides[i] if i < len(overrides) and overrides[i] else default
+        axes = {}
+        for axis in ("x", "y"):
+            a = spec.get(axis) if isinstance(spec, dict) else None
+            if not (isinstance(a, dict) and a.get("column")):
+                raise ValueError(f"scatters[{i}].{axis} needs a `column` (Wyscout header), e.g. "
+                                 f"{{column: Progressive passes per 90, label: Progressive passes /90}}")
+            axes[axis] = {"column": a["column"], "label": a.get("label") or a["column"]}
+        title = spec.get("title") or f"{axes['y']['label']} vs {axes['x']['label']}"
+        specs.append({"title": title, **axes})
+    return specs
 
 
 def build_confidence(observations: list[dict], minutes: float, pool_n: int, grading: dict) -> dict:
@@ -216,13 +272,13 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
     role = data.role_score(pool, profile)
     cols, row = pool.columns, pool.target
 
-    cuts = theme_cfg.get("tiers", {"strong": 70, "weak": 30})
+    cuts = theme_cfg.get("tiers", {"strong": 80, "weak": 20})
     pizza_svg, pizza_engine = charts.pizza_chart(profile, theme, cuts)
     categories = [{"name": c["name"], "color": theme["categories"][i % len(theme["categories"])]}
                   for i, c in enumerate(template["categories"])]
 
     scatters = []
-    for spec in template["scatters"][:2]:
+    for spec in scatter_specs(template["scatters"], report.get("scatters")):
         x_col = data.resolve_column(df, spec["x"]["column"])
         y_col = data.resolve_column(df, spec["y"]["column"])
         svg, meta = charts.scatter_chart(
@@ -249,7 +305,9 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
     observations = []
     for o in report.get("observations", []) or []:
         d = to_date(o.get("date"))
-        observations.append({**o, "date_str": d.strftime("%d/%m/%y") if d else "-",
+        grade = check_scale(o.get("grade"), f"observations[{o.get('date')}].grade", grading)
+        observations.append({**o, "grade": grade, "tone": tone(grade, "video", grading),
+                             "date_str": d.strftime("%d/%m/%y") if d else "-",
                              "mode": str(o.get("mode", "video")).capitalize()})
 
     verdict = ctx.get("recommendation", "Monitor")
@@ -257,7 +315,8 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
         raise ValueError(f"Recommendation '{verdict}' must be one of {grading['verdicts']}")
     level = report.get("level", {}) or {}
     club_level = next((lv for lv in grading["levels"] if lv["key"] == level.get("club")), None)
-    rating = report.get("rating", {}) or {}
+    rating = {k: check_scale((report.get("rating") or {}).get(k), f"rating.{k}", grading)
+              for k in ("current", "potential")}
     grades_source = report.get("grades_source") or "video"
     if grades_source not in ("video", "data"):
         raise ValueError(f"grades_source '{grades_source}' must be 'video' or 'data'")
@@ -297,8 +356,8 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
             "summary": lambda: drafts.draft_summary(
                 age, foot, role_written or template.get("role", template["label"]), player.get("position_code"),
                 height, minutes, league_label, ctx.get("season"), role),
-            "strengths": lambda: drafts.draft_strengths(profile),
-            "development": lambda: drafts.draft_development(profile),
+            "strengths": lambda: drafts.draft_strengths(profile, cuts),
+            "development": lambda: drafts.draft_development(profile, cuts),
             "risks": lambda: drafts.draft_risks(
                 contract, report_date, pool, minutes, market_value is None, role,
                 drafts.compare_role(df, player, ctx, template_key, codes, template, report.get("columns"),
@@ -311,7 +370,8 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
                     drafted[key] = lists[key]
 
     evidence_labels = {"both": "Video + data", "video": "Video only", "data": "Data only"}
-    findings = data_findings(profile, role, template.get("role", template["label"]), template["label"].lower() + "s")
+    findings = data_findings(profile, role, template.get("role", template["label"]), template["label"].lower() + "s",
+                             cuts)
     interpretation_auto = auto and not lists["interpretation"]
     if interpretation_auto:
         lists["interpretation"] = drafted["interpretation"] = [{**f, "draft": True} for f in findings]
@@ -356,6 +416,7 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
         "ctx": {
             **ctx,
             **fit,
+            "scout": ctx.get("scout") or brand["name"],
             "league": league_label,
             "data_date_str": data_date.strftime("%d %b %Y").lstrip("0"),
             "report_date_str": report_date.strftime("%d %b %Y").lstrip("0"),
@@ -366,9 +427,12 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
             "position_label": template["label"],
             "pool_label": pool_label,
         },
-        "rating": {**rating, "max": grading.get("rating_max", 10)},
-        "grades": build_grades(report.get("grades"), grading),
-        "grade_scale": grading["grade_scale"],
+        "rating": {**rating, "max": scale_max(grading)},
+        "grades": build_grades(report.get("grades"), grading, grades_source),
+        "grade_scale": grading["scale"],
+        "scale_max": scale_max(grading),
+        "data_bands": grading["data_bands"],
+        "scale_key": scale_key(grading, club_level),
         "grades_source": grades_source,
         "grades_pool": report.get("grades_pool"),
         "club_level": club_level,
@@ -382,7 +446,8 @@ def build_context(report_path: Path, export_path: Path, theme_name: str) -> dict
         "tiers": [{"label": f"Top {100 - cuts['strong']}%", "color": theme["tier_colors"]["strong"]},
                   {"label": "Middle", "color": theme["tier_colors"]["average"]},
                   {"label": f"Bottom {cuts['weak']}%", "color": theme["tier_colors"]["weak"]}],
-        "role": {**role, "name": template.get("role", template["label"])},
+        "role": {**role, "name": template.get("role", template["label"]), "value": drafts.role_value(role),
+                 "tone": charts.tier(role["percentile"], cuts)},
         "scatters": scatters,
         "pool_n": pool.n,
         "min_minutes": pool.min_minutes,

@@ -14,8 +14,9 @@ self-contained HTML file.
 ## The two pages
 
 **Page 1, decision.** Two columns, read left to right and top to bottom. Left: the recommendation with
-current and potential rating, level and projection, fit, adaptation and next step, then the summary and the
-strengths, areas to develop and risks. Right: the data that backs it, a pizza and the role score.
+current and potential rating, level and projection, fit, adaptation and next step, a one-line key to the
+scales, then the summary and the strengths, areas to develop and risks. Right: the data that backs it, a pizza
+and the role score.
 
 **Page 2, detail.** Four-corner grades and the observation log with evidence confidence, two legend-free
 scatters, in and out of possession observations with clip references, and the data and video section read
@@ -34,9 +35,10 @@ them in the console so you can paste them into the YAML and add the video view.
 **Data drafts.** A field counts as unwritten when it is empty or still holds the prompt text from
 `reports/TEMPLATE.yaml`. Unwritten fields that the data can support are pre-filled and tagged "Data draft":
 
-- `strengths`: metrics at or above the 80th percentile, highest first, up to 4.
-- `development`: metrics at or below the 25th percentile, lowest first, up to 3. None qualifying means
-  the list stays empty.
+- `strengths`: metrics in the top tier (80th percentile and above), highest first, up to 4.
+- `development`: metrics in the bottom tier (20th percentile and below), lowest first, up to 3. None
+  qualifying means the list stays empty. Both cut-offs come from `tiers` in `config/theme.yaml`, the same
+  ones that colour the pizza.
 - `risks`: facts only. Contract ending within 12 months of `report_date`, target below `min_minutes`,
   pool n < 20, market value missing in Wyscout and the YAML, and a role score drop in a second pool
   (see `compare_leagues` below).
@@ -54,17 +56,34 @@ Context options:
 - `auto_drafts: false` turns all drafts off, including the auto-generated data findings.
 - `compare_leagues: [Poland Ekstraklasa 2026-27]` builds a second pool (same position group) and
   compares the role score. A risk line is added if the role score percentile drops by 30 points or more,
-  or the score drops by 0.5 or more. If the player is not in that pool, nothing is added.
+  or the underlying weighted z-score drops by 0.5 or more. If the player is not in that pool, nothing is added.
 - `compare_min_minutes` sets the minutes threshold for that pool (default 450).
 
 Data proxy grades: before any video, you can grade attributes that have a Wyscout metric behind them by
-percentile band (1 = under the 20th, 5 = 80th and above) and set `grades_source: data` with an optional
+percentile band (`data_bands` in `config/grading.yaml`: 1 = under the 10th, 4 = 40th to 60th, 7 = 90th and
+above; 6 and 7 match the green top 20%) and set `grades_source: data` with an optional
 `grades_pool` label. The grades block then reads "Data proxy, not vs our level" and the scale shows the
 bands. Leave corners without a metric empty; they stay hidden. Switch back to video grades vs our level
 (remove `grades_source`) once you have watched the player.
 
 Page 1 works on its own for a sporting director. The two-page limit follows standard practice for detailed
 reports: longer reports get skimmed.
+
+## Scales
+
+One 1 to 7 scale for everything a scout grades, so the numbers on both pages read the same way:
+
+| What | Scale | Reads as |
+|---|---|---|
+| Rating, current and potential | 1 to 7 | vs our level, 4 = at our level |
+| Four-corner attribute grades | 1 to 7 | vs our level, 4 = at our level |
+| Match grades in the observation log | 1 to 7 | vs our level, 4 = at our level |
+| Level ladder | L1 to L6 | league tier the player plays at or can reach; `club` marks our level |
+| Pizza percentiles and role score | 0 to 100 | rank in the comparison pool, 50 = pool average |
+
+"Our level" is the `club` rung of the level ladder, so a 4 for a club recruiting at L3 means "good enough for
+an L3 side". Labels: 1 well below, 2 below, 3 close to, 4 at, 5 above, 6 well above, 7 elite, far above our
+level (`scale` in `config/grading.yaml`). Page 1 prints this as a one-line key under the decision.
 
 ## What makes it different
 
@@ -76,10 +95,11 @@ reports: longer reports get skimmed.
   the report states what is missing to reach High.
 - **Data and video reconciled.** Each interpretation line is tagged, so agreement and disagreement between
   sources is explicit.
-- **Strength-coloured pizza.** Slices are coloured by tier (top 30%, middle, bottom 30%), not by
+- **Strength-coloured pizza.** Slices are coloured by tier (top 20%, middle, bottom 20%), not by
   category, so strengths and weaknesses read at first sight. Label colour shows the category.
 - **Role score.** A weighted mean of z-scores across the template metrics, using the weights of your
-  positional profile, ranked within the pool. Percentiles show rank, z-scores show distance.
+  positional profile, shown as a 0 to 100 pool percentile next to the rank, with the same colour cut-offs
+  as the pizza. The z-score stays in the small print for analysts who want the distance.
 
 ## Pizza or radar?
 
@@ -126,7 +146,7 @@ python generate_report.py reports/<player>.yaml data/<wyscout_export>.csv [--the
 Beispiel:
 
 ```
-python generate_report.py reports/krzyzanowski.yaml data/Wyscout_League_Export_15102026.csv --theme paper
+python generate_report.py reports/example_cb.yaml data/demo_wyscout_export.xlsx --theme paper
 ```
 
 Ausgabe in `output/<spieler>-<position>/`: PDF, PNG pro Seite und HTML.
@@ -161,7 +181,12 @@ Ausgabe in `output/<spieler>-<position>/`: PDF, PNG pro Seite und HTML.
   with at least `min_minutes`. The target is always included and flagged if below the threshold.
 - **Percentile:** mid-rank percentile within the pool; lower-is-better metrics (`invert: true`) are flipped.
 - **Role score:** z-score per metric within the pool, sign flipped for inverted metrics, weighted mean using
-  `weight` from the template. 0 is the pool average; +1 is one standard deviation better.
+  `weight` from the template, then shown as the mid-rank percentile of that score within the pool (0 to 100,
+  50 = pool average). The weighted z-score is printed in small text: 0 is the pool average, +1 is one standard
+  deviation better.
+- **Scatters:** by default the two scatter pairs come from the position template (`scatters` in
+  `config/metric_templates.yaml`), so reports for the same position are comparable. A report can replace
+  either pair with its own `scatters` list (see below).
 - **Early season:** pools are small in October (a 2. Bundesliga AM pool can be 2 players). Add the previous
   season to `leagues`, or lower `min_minutes`, and say so in the report. The report warns below n = 20.
 - **Limits:** percentiles and z-scores describe output in one league and role. They do not adjust for team
@@ -171,19 +196,50 @@ Ausgabe in `output/<spieler>-<position>/`: PDF, PNG pro Seite und HTML.
 
 | What | Where |
 |---|---|
-| Metrics, weights, role names and scatter pairs per position | `config/metric_templates.yaml` |
-| Grade scale, level ladder, confidence rules, verdicts, rating scale | `config/grading.yaml` |
-| Name, tagline, website, logo, confidentiality line, colours, tier cut-offs | `config/theme.yaml` |
+| Metrics, weights, role names and scatter pairs per position | `config/metric_templates.yaml` (scatters per player: `scatters` in the report YAML) |
+| 1 to 7 scale (rating and grades), data proxy bands, level ladder, confidence rules, verdicts | `config/grading.yaml` |
+| Name, tagline, website, logo, confidentiality line, colours, tier cut-offs | `config/theme.yaml` (personal values in `config/local/theme.yaml`) |
 | Logo set: lockups, avatar, favicon (SVG, PNG, light and dark) | `python scripts/export_logo.py` writes to `assets/brand/` |
 | Layout | `templates/report.html.j2`, `templates/report.css` |
 
 If a metric header does not exist in your export, the error lists the closest headers it found.
 
+### Scatters per player
+
+Add `scatters` to a report YAML to show different pairs for that player only, e.g. when the role differs from
+the template profile. One entry per slot; `null` keeps the template pair for that slot. `label` defaults to
+the column header and `title` to "Y vs X".
+
+```yaml
+scatters:
+  - title: Wide delivery
+    x: {column: Crosses per 90, label: Crosses /90}
+    y: {column: xA per 90, label: xA /90}
+  - null                       # second scatter stays as in the template
+```
+
+### Personal setup, kept out of the repo
+
+`config/` holds neutral defaults (brand "Your Name"). Put your own values in `config/local/<same file name>`,
+for example:
+
+```yaml
+# config/local/theme.yaml
+brand:
+  name: Your Full Name
+  tagline: Football Scouting & Data
+  website: your-site.dev
+```
+
+Local files are merged over the shared ones key by key, so they only need what changes. `context.scout`
+left empty falls back to `brand.name`. `config/local/` and every report in `reports/` except `TEMPLATE.yaml`
+and `example_cb.yaml` are git-ignored, so real player files stay on your machine.
+
 ## Structure
 
 ```
-config/            metric templates, grading model, theme and brand
-reports/           TEMPLATE.yaml, a fictional example and a real-data example
+config/            metric templates, grading model, theme and brand (local/ = personal overrides, git-ignored)
+reports/           TEMPLATE.yaml and a fictional example (your own reports are git-ignored)
 data/              Wyscout exports (demo file is fictional, real exports are git-ignored)
 scout_report/      data.py (pools, percentiles, role score), charts.py (pizza, scatters), render.py
 templates/         HTML template and CSS

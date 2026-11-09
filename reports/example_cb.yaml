@@ -29,7 +29,7 @@ context:
   data_source: Wyscout
   data_date: 2026-10-15
   report_date: 2026-11-05
-  scout: Moritz Philipp Haaf
+  scout:                        # empty = brand name from config/theme.yaml
   leagues: [Demo Liga 2026-27]   # exact value(s) of the export's "League" column
   min_minutes: 600
   recommendation: Sign           # Sign | Monitor | Continue scouting | Discard
@@ -40,9 +40,9 @@ context:
   reference_line: mean           # mean | median in scatters
   scatter_labels: 4
 
-rating:                          # 1 to 10
-  current: 6
-  potential: 8
+rating:                          # 1 to 7 vs our level, 4 = at our level (config/grading.yaml)
+  current: 3
+  potential: 4
 
 # Level ladder keys from config/grading.yaml. `club` is the level you recruit for.
 level:
@@ -51,7 +51,7 @@ level:
   club: L3
   horizon: 2 to 3 years
 
-# Four-corner grades, 1 to 5, relative to the club level (see config/grading.yaml).
+# Four-corner grades, 1 to 7, relative to the club level (see config/grading.yaml).
 grades:
   Technical:
     Passing range: 4

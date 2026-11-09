@@ -31,7 +31,7 @@ context:
   data_source: Wyscout
   data_date: 2026-10-15
   report_date:
-  scout: Moritz Philipp Haaf
+  scout:                          # empty = brand name from config/theme.yaml
   min_minutes: 600
   # auto_drafts: true              # false = no data drafts; unwritten prompts are still hidden
   # compare_leagues: [Poland Ekstraklasa 2026-27]  # second pool, e.g. the current season; adds a risk
@@ -45,7 +45,7 @@ context:
   reference_line: mean             # mean | median in scatters
   scatter_labels: 4
 
-rating:                            # 1 to 10, see config/grading.yaml
+rating:                            # 1 to 7 vs our level, 4 = at our level (config/grading.yaml)
   current:
   potential:
 
@@ -55,9 +55,9 @@ level:                             # ladder keys from config/grading.yaml
   club: L3
   horizon:
 
-# 1 to 5, relative to our level. Pick the three attributes per corner that
-# matter most for the role (from your positional profile).
-# grades_source: data              # optional before video: grades are percentile bands of 20
+# 1 to 7, relative to our level (same scale as the rating). Pick the three attributes
+# per corner that matter most for the role (from your positional profile).
+# grades_source: data              # optional before video: grades are percentile bands (data_bands in grading.yaml)
 # grades_pool: Ekstraklasa FB percentiles  #   from a data proxy, labelled "not vs our level"
 grades:
   Technical:
@@ -78,9 +78,18 @@ grades:
     Communication:
 
 observations: []
-  # - {date: 2026-10-04, opponent: Opponent, competition: League, mode: live, minutes: 90, grade: 3}
+  # - {date: 2026-10-04, opponent: Opponent, competition: League, mode: live, minutes: 90, grade: 4}
 
 highlight_players: []
+
+# Optional: replace the position template's scatter pairs for this player only.
+# One entry per slot (first, second); null keeps the template pair for that slot.
+# Columns are Wyscout headers; label defaults to the header, title to "Y vs X".
+# scatters:
+#   - title: Wide delivery
+#     x: {column: Crosses per 90, label: Crosses /90}
+#     y: {column: xA per 90, label: xA /90}
+#   - null
 
 scouting:
   summary:

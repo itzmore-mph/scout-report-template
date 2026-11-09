@@ -1,7 +1,7 @@
 """Export the personal logo set (SVG and PNG, light and dark) to assets/brand/.
 
 Usage: python scripts/export_logo.py
-Name and tagline come from config/theme.yaml. All text is outlined, so the SVGs
+Name and tagline come from config/theme.yaml (and config/local/theme.yaml if present). All text is outlined, so the SVGs
 render identically without the font installed.
 
 Files:
@@ -15,12 +15,12 @@ Files:
 import sys
 from pathlib import Path
 
-import yaml
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from scout_report import brand  # noqa: E402
+from scout_report.config import load_config  # noqa: E402
 
 OUT = ROOT / "assets" / "brand"
 
@@ -30,7 +30,7 @@ def sized(svg_src: str, width: int) -> str:
 
 
 def main() -> None:
-    cfg = yaml.safe_load((ROOT / "config" / "theme.yaml").read_text(encoding="utf-8"))
+    cfg = load_config("theme.yaml")
     name, tag = cfg["brand"]["name"], cfg["brand"]["tagline"]
     themes = {"paper": cfg["themes"]["paper"], "night": cfg["themes"]["night"]}
     OUT.mkdir(parents=True, exist_ok=True)

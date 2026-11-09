@@ -4,3 +4,9 @@ output/
 # Keep real Wyscout exports out of public repos (licensed data).
 data/*
 !data/demo_wyscout_export.xlsx
+
+# Personal setup stays local: config overrides and real player reports.
+config/local/
+reports/*
+!reports/TEMPLATE.yaml
+!reports/example_cb.yaml

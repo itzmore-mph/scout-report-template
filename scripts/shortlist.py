@@ -4,8 +4,9 @@ Usage:
     python scripts/shortlist.py EXPORT --template CB --max-age 21 \
         --leagues "Austria Bundesliga 2025-26" "Poland Ekstraklasa 2025-26"
 
-Role scores are computed within each league's own pool (same method as the report),
-so a score of +1.0 means one standard deviation above that league's average for the role.
+Role scores are computed within each league's own pool (same method as the report).
+`role_pct` is the 0 to 100 pool percentile shown on the report; `role_z` is the weighted
+z-score behind it (+1.0 = one standard deviation above that league's average for the role).
 """
 
 import argparse
@@ -13,15 +14,16 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scout_report import data  # noqa: E402
+from scout_report.config import load_config  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def main() -> None:
+    sys.stdout.reconfigure(encoding="utf-8")  # player names with accents on Windows consoles
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("export")
     ap.add_argument("--template", default="CB")
@@ -32,7 +34,7 @@ def main() -> None:
     ap.add_argument("--out", default=None, help="optional CSV path")
     args = ap.parse_args()
 
-    cfg = yaml.safe_load((ROOT / "config" / "metric_templates.yaml").read_text(encoding="utf-8"))
+    cfg = load_config("metric_templates.yaml")
     template, codes = cfg["templates"][args.template], cfg["position_groups"][args.template]
     df = data.load_export(args.export)
 
@@ -51,13 +53,13 @@ def main() -> None:
             rs = data.role_score(pool, prof)
             rows.append({"league": league, "player": r["Player"], "team_in_season": r.get("Team within selected timeframe", r["Team"]), "team_now": r["Team"], "pos": r.get("Main Position"),
                          "age": r["Age"], "minutes": r["Minutes played"], "market_value": r.get("Market value"),
-                         "contract": r.get("Contract expires"), "role_score": round(rs["score"], 2),
+                         "contract": r.get("Contract expires"), "role_pct": round(rs["percentile"]), "role_z": round(rs["score"], 2),
                          "rank": f"{rs['rank']}/{rs['n']}"})
 
     out = pd.DataFrame(rows)
     if out.empty:
         return
-    out = out[out["age"] <= args.max_age].sort_values(["league", "role_score"], ascending=[True, False])
+    out = out[out["age"] <= args.max_age].sort_values(["league", "role_z"], ascending=[True, False])
     top = out.groupby("league").head(args.top)
     with pd.option_context("display.width", 200, "display.max_columns", 20):
         print(f"{template.get('role', args.template)}, {args.min_minutes}+ min, age <= {args.max_age}\n")

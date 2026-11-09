@@ -2,13 +2,15 @@
 # `paper` is the print version for recruitment meetings.
 #
 # Colour logic: green means strong. The pizza colours each slice by how good the
-# value is (top 30%, middle, bottom 30%), not by category, so strengths stand out
+# value is (top 20%, middle, bottom 20%), not by category, so strengths stand out
 # at first sight. Categories are shown by the colour of the metric labels.
 
+# Personal settings: put your own `brand:` block (or any other key) in
+# config/local/theme.yaml. That folder is git-ignored and merged over this file.
 brand:
-  name: Moritz Philipp Haaf
+  name: Your Name                   # also the default scout when context.scout is empty
   tagline: Football Scouting & Data
-  website: itzmore.dev              # portfolio link, shown in the footer
+  website: null                     # optional link, shown in the footer
   logo: null                        # optional SVG/PNG path; replaces the built-in logo
   confidentiality: Confidential. Prepared for internal recruitment use.
 
@@ -16,9 +18,9 @@ fonts:
   display: Inter Display   # falls back to Inter with optical sizing
   body: Inter
 
-tiers:                     # percentile cut-offs for slice colours
-  strong: 70
-  weak: 30
+tiers:                     # percentile cut-offs: pizza slices, role score, data drafts
+  strong: 80               # top 20% = green
+  weak: 20                 # bottom 20% = red
 
 themes:
   night:                   # floodlit pitch
